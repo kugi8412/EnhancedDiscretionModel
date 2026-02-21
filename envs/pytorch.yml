@@ -1,0 +1,22 @@
+name: deepstarr
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python
+  - pytorch
+  - pytorch-cuda
+  - biopython
+  - h5py
+  - matplotlib
+  - numpy
+  - pandas
+  - scikit-learn
+  - scipy
+  - networkx
+  - pyyaml
+  - tqdm
+  - pip
