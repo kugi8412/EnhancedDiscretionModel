@@ -1,0 +1,296 @@
+% Plik LaTeX
+
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[polish]{babel}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{setspace}
+\geometry{margin=2.5cm}
+\setstretch{1.05}
+
+% Definicja komendy publikacji:
+% #1 = author list
+% #2 = title
+% #3 = journal
+% #4 = date/volume/pages
+% #5 = doi
+% #6 = PMID
+% #7 = PMCID
+% #8 = URL
+% #9 = Short description
+\newcommand{\Pub}[9]{%
+  \item #1. #2. \textit{#3}. #4. doi: \href{https://doi.org/#5}{#5}. PMID: \href{https://pubmed.ncbi.nlm.nih.gov/#6/}{#6}; PMCID: \href{https://www.ncbi.nlm.nih.gov/pmc/articles/#7/}{#7}. \\
+  \noindent Link: \url{#8}\\
+  \ifx#9\relax\else\\\textit{Note:} #9\fi
+}
+
+\begin{document}
+
+\begin{center}
+  {\LARGE \textbf{DeepSTARR - Publications}}\\[6pt]
+  {\small Format: Authors. Title. \textit{Journal}. data;volume:pages. doi. PMID; PMCID. link}
+\end{center}
+
+\vspace{6pt}
+
+\begin{enumerate}[leftmargin=*,label=\textbf{\arabic*.}]
+\Pub{Foutadakis S, Bourika V, Styliara I, Koufargyris P, Safarika A, Karakike E.}{Machine learning tools for deciphering the regulatory logic of enhancers in health and disease}{Front Genet}{Front Genet. 2025 Aug 13;16:1603687.}{10.3389/fgene.2025.1603687}{40881170}{PMC12380740}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12380740/}{Overview of AI methods}
+
+\Pub{Zhou J, Rizzo K, Tang Z, Koo PK.}{Uncertainty-aware genomic deep learning with knowledge distillation}{bioRxiv}{bioRxiv [Preprint]. 2024 Nov 15:2024.11.13.623485.}{10.1101/2024.11.13.623485}{39605624}{PMC11601481}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11601481/}{DEGU - framework for model ensembling (train with augmentations and predict mean): \url{https://github.com/zrcjessica/ensemble_distillation}}
+
+
+\Pub{Duncan AG, Mitchell JA, Moses AM.}{Improving the performance of supervised deep learning for regulatory genomics using phylogenetic augmentation}{Bioinformatics}{Bioinformatics. 2024 Mar 29;40(4):btae190.}{10.1093/bioinformatics/btae190}{38588559}{PMC11042905}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11042905/}{Homologs augmentation + Fine Tuning improve HS and DEV max of 0.03 (data leak?)}
+
+
+\Pub{Yu Y, Muthukumar S, Koo PK.}{EvoAug-TF: Extending evolution-inspired data augmentations for genomic deep learning to TensorFlow}{bioRxiv}{bioRxiv [Preprint]. 2024 Jan 18:2024.01.17.575961.}{10.1101/2024.01.17.575961}{38293144}{PMC10827165}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10827165/}{\textbf{EvoAug} - TensorFlow package for data augmentation, improve HS 0.03 and DEV 0.02}
+
+\newpage
+
+\Pub{Lee NK, Tang Z, Toneyan S, Koo PK.}{EvoAug: improving generalization and interpretability of genomic deep neural networks with evolution-inspired data augmentations}{Genome Biol}{Genome Biol. 2023 May 5;24(1):105.}{10.1186/s13059-023-02941-w}{37143118}{PMC10161416}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10161416/}{\textbf{EvoAug} - Pytorch package for data augmentation, improve HS 0.03 and DEV 0.02.}
+
+\Pub{Seitz EE, McCandlish DM, Kinney JB, Koo PK.}{Interpreting cis-regulatory mechanisms from genomic deep neural networks using surrogate models}{bioRxiv}{bioRxiv [Preprint]. 2024 Mar 2:2023.11.14.567120.}{10.1101/2023.11.14.567120}{38013993}{PMC10680760}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10680760/}{\textbf{SQUID} - model to predict focus of model (the lowest variance XAI): \url{https://github.com/evanseitz/squid-nn}.}
+
+\Pub{Majdandzic A, Rajesh C, Koo PK.}{Correcting gradient-based interpretations of deep neural networks for genomics}{Genome Biol}{Genome Biol. 2023 May 9;24(1):109.}{10.1186/s13059-023-02956-3}{37161475}{PMC10169356}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10169356/}{\textbf{Gradient Correction} - Improve XAI, angles histogram (hard math).}
+
+\Pub{Li Z, Zhang Y, Peng B, Qin S, Zhang Q, Chen Y, Chen C, Bao Y, Zhu Y, Hong Y, Liu B, Liu Q, Xu L, Chen X, Ma X, Wang H, Xie L, Yao Y, Deng B, Li J, De B, Chen Y, Wang J, Li T, Liu R, Tang Z, Cao J, Zuo E, Mei C, Zhu F, Shao C, Wang G, Sun T, Wang N, Liu G, Ni JQ, Liu Y.}{A novel interpretable deep learning-based computational framework designed synthetic enhancers with broad cross-species activity}{Nucleic Acids Res}{Nucleic Acids Res. 2024 Nov 27;52(21):13447-13468.}{10.1093/nar/gkae912}{39420601}{PMC11602155}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11602155/}{\textbf{CRE optimization} by genetic algorithm.}
+
+\Pub{Song T, Song H, Pan Z, Gao Y, Dai H, Wang X.}{DeepDualEnhancer: A Dual-Feature Input DNABert Based Deep Learning Method for Enhancer Recognition}{Int J Mol Sci}{Int J Mol Sci. 2024 Nov 1;25(21):11744.}{10.3390/ijms252111744}{39519295}{PMC11546905}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11546905/}{DeepDualEnhancer - Better Enhancer classification with BiLSTM.}
+
+\Pub{Cheng W, Shen J, Khodak M, Ma J, Talwalkar A.}{L2G: Repurposing Language Models for Genomics Tasks}{bioRxiv}{bioRxiv [Preprint]. 2024 Dec 10:2024.12.09.627422.}{10.1101/2024.12.09.627422}{39713364}{PMC11661171}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11661171/}{L2G - cross-modal transfer paradigm, beats HyenaDNA and BERTDNA.}
+
+\Pub{Seitz EE, McCandlish DM, Kinney JB, Koo PK.}{Uncovering the Mechanistic Landscape of Regulatory DNA with Deep Learning}{bioRxiv}{bioRxiv [Preprint]. 2025 Oct 8:2025.10.07.681052.}{10.1101/2025.10.07.681052}{41278958}{PMC12632608}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12632608/}{SEAM - Framework for gradient calculation.}
+
+\Pub{Klie A, Laub D, Talwar JV, Stites H, Jores T, Solvason JJ, Farley EK, Carter H.}{Predictive analyses of regulatory sequences with EUGENe}{Nat Comput Sci}{Nat Comput Sci. 2023 Nov;3(11):946-956.}{10.1038/s43588-023-00544-w}{38177592}{PMC10768637}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10768637/}{EUGENe - unified framework for genome predictions.}
+
+\Pub{Reiter F, de Almeida BP, Stark A.}{Enhancers display constrained sequence flexibility and context-specific modulation of motif function}{Genome Res}{Genome Res. 2023 Mar;33(3):346-358.}{10.1101/gr.277246.122}{36941077}{PMC10078294}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10078294/}{Motif's flanking has great impact.}
+
+\Pub{Novakovsky G, Fornes O, Saraswat M, Mostafavi S, Wasserman WW.}{ExplaiNN: interpretable and transparent neural networks for genomics}{Genome Biol}{Genome Biol. 2023 Jun 27;24(1):154.}{10.1186/s13059-023-02985-y}{37370113}{PMC10303849}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10303849/}{ExplainNN - Filters detect motifs (not really).}
+
+\Pub{Woo HJ, Kim J, Kim SM, Kim D, Moon JY, Park D, Lee JS.}{Context-dependent genomic locus effects on antibody production in recombinant Chinese hamster ovary cells generated through random integration}{Comput Struct Biotechnol J}{Comput Struct Biotechnol J. 2024 Apr 10;23:1654-1665.}{10.1016/j.csbj.2024.04.023}{38680870}{PMC11046053}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11046053/}{Biology - transgene integration site and composition of the rCHO cell.}
+
+\Pub{Chen S, Loubiere V, Hollingsworth EW, Jacinto SH, Dizehchi A, Schreiber J, Kvon EZ, Stark A.}{Predictive design of tissue-specific mammalian enhancers that function in vivo in the mouse embryo}{bioRxiv}{bioRxiv [Preprint]. 2025 Dec 24:2025.12.22.695948.}{10.64898/2025.12.22.695948}{41497587}{PMC12767527}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12767527/}{DeepSTARR model on mouse cells.}
+
+\Pub{Santos M, Johari YB, Biggins L, Elliott NC, Schoenfelder S, Boddireddy M, Fabian DK, Anbar M, O'Callaghan PM, Rugg-Gunn PJ.}{Comprehensive Mapping of Functional Enhancers in Chinese Hamster Ovary Cells}{Biotechnol Bioeng}{Biotechnol Bioeng. 2026 Jan;123(1):196-211.}{10.1002/bit.70076}{41039989}{PMC12699134}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12699134/}{DeepSTARR model on hamster cells.}
+
+\Pub{Dalla-Torre H, Gonzalez L, Mendoza-Revilla J, Lopez Carranza N, Grzywaczewski AH, Oteri F, Dallago C, Trop E, de Almeida BP, Sirelkhatim H, Richard G, Skwark M, Beguir K, Lopez M, Pierrot T.}{Nucleotide Transformer: building and evaluating robust foundation models for human genomics}{Nat Methods}{Nat Methods. 2025 Feb;22(2):287-297.}{10.1038/s41592-024-02523-z}{39609566}{PMC11810778}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11810778/}{Biology - Using DeepSTARR dataset.}
+
+\Pub{Jeong CB, Cho H, Park D.}{Deep learning application for genomic data analysis}{BMB Rep}{BMB Rep. 2026 Jan;59(1):60-68.}{10.5483/BMBRep.2025-0020}{40962325}{PMC12867181}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12867181/}{Overview AI model in genomics.}
+
+\Pub{Cornejo-Páramo P, Zhang X, Louis L, Li Z, Yang Y, Wong ES.}{Motif-based models accurately predict cell type-specific distal regulatory elements}{Nat Commun}{Nat Commun. 2025 Nov 24;16(1):10370.}{10.1038/s41467-025-65362-2}{41285795}{PMC12644898}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12644898/}{\textbf{BOM} - XGBoost on 0/1 motifs 0.78 on DEV and 0.42 in HS.}
+
+\newpage
+
+\Pub{Rafi AM, Nogina D, Penzar D, Lee D, Lee D, Kim N, Kim S, Kim D, Shin Y, Kwak IY, Meshcheryakov G, Lando A, Zinkevich A, Kim BC, Lee J, Kang T, Vaishnav ED, Yadollahpour P; Random Promoter DREAM Challenge Consortium; Kim S, Albrecht J, Regev A, Gong W, Kulakovskiy IV, Meyer P, de Boer CG.}{A community effort to optimize sequence-based deep learning models of gene regulation}{Nat Biotechnol}{Nat Biotechnol. 2025 Aug;43(8):1373-1383.}{10.1038/s41587-024-02414-w}{39394483}{PMC12339383}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12339383/}{\textbf{DREAM Challenge} - Prix Fixe framework to divide models into modular building blocks.}
+
+\Pub{Chen X, Xu H, Yu S, Hu W, Zhang Z, Wang X, Yuan Y, Wang M, Chen L, Lin X, Hu Y, Cai P.}{AI-Driven Transcriptome Prediction in Human Pathology: From Molecular Insights to Clinical Applications}{Biology (Basel)}{Biology (Basel). 2025 Jun 4;14(6):651.}{10.3390/biology14060651}{40563902}{PMC12189417}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12189417/}{Overview of AI methods}
+
+\Pub{de Almeida BP, Schaub C, Pagani M, Secchia S, Furlong EEM, Stark A.}{Targeted design of synthetic enhancers for selected tissues in the Drosophila embryo}{Nature}{Nature. 2024 Feb;626(7997):207-211.}{10.1038/s41586-023-06905-9}{38086418}{PMC10830412}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10830412/}{Transfer learning: \url{https://github.com/bernardo-de-almeida/DeepSTARR_embryo}}
+
+\Pub{Song K, Ji H, Lee J, Yoon Y.}{Microbial Transcription Factor-Based Biosensors: Innovations from Design to Applications in Synthetic Biology}{Biosensors (Basel)}{Biosensors (Basel). 2025 Mar 31;15(4):221.}{10.3390/bios15040221}{40277535}{PMC12024804}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12024804/}{Transcription factor-based biosensors, detecting TF in DeepSTARR data}
+
+\Pub{D'Elia B, Fuxman Bass J.}{Applications of high-throughput reporter assays to gene regulation studies}{Curr Opin Struct Biol}{Curr Opin Struct Biol. 2025 Oct;94:103105.}{10.1016/j.sbi.2025.103105}{40580800}{PMC12221203}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12221203/}{This article will be available in PMC on June 27, 2026 }
+
+\newpage
+
+\Pub{Fixsen BR, Han CZ, Zhou Y, Spann NJ, Saisan P, Shen Z, Balak C, Sakai M, Cobo I, Holtman IR, Warden AS, Ramirez G, Collier JG, Pasillas MP, Yu M, Hu R, Li B, Belhocine S, Gosselin D, Coufal NG, Ren B, Glass CK.}{SALL1 enforces microglia-specific DNA binding and function of SMADs to establish microglia identity}{Nat Immunol}{Nat Immunol. 2023 Jul;24(7):1188-1199.}{10.1038/s41590-023-01528-8}{37322178}{PMC10307637}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10307637/}{Using DeepSTARR model for SALL1 gen.}
+
+\Pub{Xu L, Liu Y.}{Identification, Design, and Application of Noncoding Cis-Regulatory Elements}{Biomolecules}{Biomolecules. 2024 Aug 5;14(8):945.}{10.3390/biom14080945}{39199333}{PMC11352686}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11352686/}{Reference DeepSTARR on AI methods to detect TF.}
+
+\Pub{Raicu AM, Fay JC, Rohner N, Zeitlinger J, Arnosti DN.}{Off the deep end: What can deep learning do for the gene expression field?}{J Biol Chem}{J Biol Chem. 2023 Jan;299(1):102760.}{10.1016/j.jbc.2022.102760}{36462664}{PMC9801099}{https://pmc.ncbi.nlm.nih.gov/articles/PMC9801099/}{}
+
+\Pub{Smith GD, Ching WH, Cornejo-Páramo P, Wong ES.}{Decoding enhancer complexity with machine learning and high-throughput discovery}{Genome Biol}{Genome Biol. 2023 May 12;24(1):116.}{10.1186/s13059-023-02955-4}{37173718}{PMC10176946}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10176946/}{Discussion of AI methods.}
+
+\Pub{Li X, Ye C, Liu T, Li S, Zhang M, Zhao Y, Jin Y, Cheng J, Yang G, Li P.}{Engineering genetic elements for microbial protein expression systems: Advances, challenges, applications, and prospects}{Synth Syst Biotechnol}{Synth Syst Biotechnol. 2025 Oct 24;11:370-384.}{10.1016/j.synbio.2025.10.008}{41280279}{PMC12629926}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12629926/}{Overview of AI methods.}
+
+\Pub{Ding N, Yuan Z, Ma Z, Wu Y, Yin L.}{AI-Assisted Rational Design and Activity Prediction of Biological Elements for Optimizing Transcription-Factor-Based Biosensors}{Molecules}{Molecules. 2024 Jul 26;29(15):3512.}{10.3390/molecules29153512}{39124917}{PMC11313831}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11313831/}{AI methods in Activity Prediction.}
+
+\Pub{Fishman V, Kuratov Y, Shmelev A, Petrov M, Penzar D, Shepelin D, Chekanov N, Kardymon O, Burtsev M.}{GENA-LM: a family of open-source foundational DNA language models for long sequences}{Nucleic Acids Res}{Nucleic Acids Res. 2025 Jan 11;53(2):gkae1310.}{10.1093/nar/gkae1310}{39817513}{PMC11734698}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11734698/}{GENA-LM - Using DeepSTARR data to classify enhancers.}
+
+\Pub{Chen Y, Zhang Y, Damoraki G, Wang S.}{Editorial: Genetic horizons: exploring genetic biomarkers in therapy and evolution with the aid of artificial intelligence}{Front Genet}{Front Genet. 2026 Feb 6;17:1775149.}{10.3389/fgene.2026.1775149}{41727388}{PMC12920033}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12920033/}{Disscusion of synthetic enhancers.}
+
+\Pub{Moeckel C, Mouratidis I, Chantzi N, Uzun Y, Georgakopoulos-Soares I.}{Advances in computational and experimental approaches for deciphering transcriptional regulatory networks: Understanding the roles of cis-regulatory elements is essential, and recent research utilizing MPRAs, STARR-seq, CRISPR-Cas9, and machine learning has yielded valuable insights}{Bioessays}{Bioessays. 2024 Jul;46(7):e2300210.}{10.1002/bies.202300210}{38715516}{PMC11444527}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11444527/}{Mention about STARR-seq and other similar methods.}
+
+\Pub{Zhang Z, Bao X, Jiang L, Luo X, Wang Y, Comai A, Waldhaus J, Hansen AS, Li W, Liu J.}{Developing a general AI model for integrating diverse genomic modalities and comprehensive genomic knowledge}{bioRxiv}{bioRxiv [Preprint]. 2025 May 14:2025.05.08.652986.}{10.1101/2025.05.08.652986}{40462903}{PMC12132192}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12132192/}{Model on RNA assays.}
+
+\Pub{Mulet-Lazaro R, Delwel R.}{Oncogenic Enhancers in Leukemia}{Blood Cancer Discov}{Blood Cancer Discov. 2024 Sep 3;5(5):303-317.}{10.1158/2643-3230.BCD-23-0211}{39093124}{PMC11369600}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11369600/}{DeepSTARR as the SOTA model.}
+
+\newpage
+
+\Pub{Loubiere V, de Almeida BP, Pagani M, Stark A.}{Developmental and housekeeping transcriptional programs display distinct modes of enhancer-enhancer cooperativity in Drosophila}{Nat Commun}{Nat Commun. 2024 Oct 3;15(1):8584.}{10.1038/s41467-024-52921-2}{39362902}{PMC11450171}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11450171/}{Biological analyse of DeepSTARR data.}
+
+\Pub{An Z, Jiang A, Chen J.}{Toward understanding the role of genomic repeat elements in neurodegenerative diseases}{Neural Regen Res}{Neural Regen Res. 2025 Mar 1;20(3):646-659.}{10.4103/NRR.NRR-D-23-01568}{38886931}{PMC11433896}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11433896/}{DeepSTARR as the SOTA model.}
+
+\Pub{Arnold M, Stengel KR.}{Emerging insights into enhancer biology and function}{Transcription}{Transcription. 2023 Nov;14(1-2):68-87.}{10.1080/21541264.2023.2222032}{37312570}{PMC10353330}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10353330/}{DeepSTARR as the SOTA model and STARR-seq to detect enhancers.}
+
+\Pub{Das M, Banerjee D, Hossain A, Jensen M, Mogre S, Sun J, Mao J, Glick AB, Salis HM, Girirajan S.}{Quantifying the impact of genetic mutations on enhancer dynamics}{bioRxiv}{bioRxiv [Preprint]. 2025 Oct 21:2025.10.21.683558.}{10.1101/2025.10.21.683558}{41279603}{PMC12633387}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12633387/}{STARR-seq protocol.}
+
+\Pub{Wang C, Lei B, Bao Y, Wang Z, Chen C, Zhang Y, Qin S, Sun T, Tang Z, Liu Y.}{Multi-omics analysis reveals critical cis-regulatory roles of transposable elements in livestock genomes}{iScience}{iScience. 2025 Feb 18;28(3):112049.}{10.1016/j.isci.2025.112049}{40104067}{PMC11914811}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11914811/}{DeepSTARR as the SOTA model.}
+
+\Pub{Kuang Z, Yan X, Yuan Y, Wang R, Zhu H, Wang Y, Li J, Ye J, Yue H, Yang X.}{Advances in stress-tolerance elements for microbial cell factories}{Synth Syst Biotechnol}{Synth Syst Biotechnol. 2024 Jun 28;9(4):793-808.}{10.1016/j.synbio.2024.06.008}{39072145}{PMC11277822}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11277822/}{DeepSTARR as the SOTA model.}
+
+\Pub{Iurlaro M, Masoni F, Flyamer IM, Wirbelauer C, Iskar M, Burger L, Giorgetti L, Schübeler D.}{Systematic assessment of ISWI subunits shows that NURF creates local accessibility for CTCF}{Nat Genet}{Nat Genet. 2024 Jun;56(6):1203-1212.}{10.1038/s41588-024-01767-x}{38816647}{PMC11176080}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11176080/}{Analyse TF in Catalytic activity of the imitation switch using DeepSTARR model.}
+
+\Pub{Deng C, Whalen S, Steyert M, Ziffra R, Przytycki PF, Inoue F, Pereira DA, Capauto D, Norton S, Vaccarino FM, Pollen A, Nowakowski TJ, Ahituv N, Pollard KS.}{Massively parallel characterization of psychiatric disorder-associated and cell-type-specific regulatory elements in the developing human cortex}{bioRxiv}{bioRxiv [Preprint]. 2023 Feb 16:2023.02.15.528663.}{10.1101/2023.02.15.528663}{36824845}{PMC9949039}{https://pmc.ncbi.nlm.nih.gov/articles/PMC9949039/}{Huge letniMPRA on human cortex data, DeepSTARR worse: no code.}
+
+\Pub{Mulet-Lazaro R, Delwel R.}{From Genotype to Phenotype: How Enhancers Control Gene Expression and Cell Identity in Hematopoiesis}{Hemasphere}{Hemasphere. 2023 Nov 8;7(11):e969.}{10.1097/HS9.0000000000000969}{37953829}{PMC10635615}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10635615/}{STARR-seq sequencing.}
+
+\Pub{Zeitlinger J, Roy S, Ay F, Mathelier A, Medina-Rivera A, Mahony S, Sinha S, Ernst J.}{Perspective on recent developments and challenges in regulatory and systems genomics}{Bioinform Adv}{Bioinform Adv. 2025 May 9;5(1):vbaf106.}{10.1093/bioadv/vbaf106}{40626041}{PMC12233095}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12233095/}{DeepSTARR model as SOTA and STARR-seq as good technique.}
+
+\Pub{Thomas HF, Buecker C.}{What is an enhancer?}{Bioessays}{Bioessays. 2023 Oct;45(10):e2300044.}{10.1002/bies.202300044}{37256273}{PMC11475577}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11475577/}{STARR-seq to predict enhancers.}
+
+\Pub{Lei S, Li C, She Y, Zhou S, Shi H, Chen R.}{Roles of super enhancers and enhancer RNAs in skeletal muscle development and disease}{Cell Cycle}{Cell Cycle. 2023 Mar;22(5):495-505.}{10.1080/15384101.2022.2129240}{36184878}{PMC9928468}{https://pmc.ncbi.nlm.nih.gov/articles/PMC9928468/}{What is super-enhancers.}
+
+\Pub{Mach P, Giorgetti L.}{Integrative approaches to study enhancer-promoter communication}{Curr Opin Genet Dev}{Curr Opin Genet Dev. 2023 Jun;80:102052.}{10.1016/j.gde.2023.102052}{37257410}{PMC10293802}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10293802/}{Enhacer - Promoter interaction.}
+
+\Pub{He AY, Palamuttam NP, Danko CG.}{Training deep learning models on personalized genomic sequences improves variant effect prediction}{bioRxiv}{bioRxiv [Preprint]. 2025 Feb 15:2024.10.15.618510.}{10.1101/2024.10.15.618510}{39463940}{PMC11507713}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11507713/}{Enhancer design is emerging field.}
+
+\Pub{Loell KJ, Friedman RZ, Myers CA, Corbo JC, Cohen BA, White MA.}{Transcription factor interactions explain the context-dependent activity of CRX binding sites}{PLoS Comput Biol}{PLoS Comput Biol. 2024 Jan 16;20(1):e1011802.}{10.1371/journal.pcbi.1011802}{38227575}{PMC10817189}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10817189/}{DeepSTARR model as SOTA }
+
+\Pub{Zeng X, Wei Z, Du Q, Li J, Xie Z, Wang X.}{Unveil cis-acting combinatorial mRNA motifs by interpreting deep neural network}{Bioinformatics}{Bioinformatics. 2024 Jun 28;40(Suppl 1):i381-i389.}{10.1093/bioinformatics/btae262}{38940172}{PMC11211823}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11211823/}{Deep-learning model is crucial for discovering motifs.}
+
+\Pub{Penzar D, Nogina D, Noskova E, Zinkevich A, Meshcheryakov G, Lando A, Rafi AM, de Boer C, Kulakovskiy IV.}{LegNet: a best-in-class deep learning model for short DNA regulatory regions}{Bioinformatics}{Bioinformatics. 2023 Aug 1;39(8):btad457.}{10.1093/bioinformatics/btad457}{37490428}{PMC10400376}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10400376/}{\textbf{LegNET} as best model for short DNA regulatory regions.}
+
+\newpage
+
+
+\Pub{Guo Z, Fan W, Cai C, Zhang K, Hou X, Li Y, Cheng F.}{PlantDeepMeth: A Deep Learning Model for Predicting DNA Methylation States in Plants}{Plants (Basel)}{Plants (Basel). 2025 Jun 5;14(11):1724.}{10.3390/plants14111724}{40508398}{PMC12157073}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12157073/}{Detect Methylation of plants + PCA of filters to detect motifs}
+
+\Pub{Fischer M, Sammons MA.}{Determinants of p53 DNA binding, gene regulation, and cell fate decisions}{Cell Death Differ}{Cell Death Differ. 2024 Jul;31(7):836-843.}{10.1038/s41418-024-01326-1}{38951700}{PMC11239874}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11239874/}{Detect p53 DNA binding using STARR-seq.}
+
+\Pub{Routhier E, Joubert A, Westbrook A, Pierre E, Lancrey A, Cariou M, Boulé JB, Mozziconacci J.}{In silico design of DNA sequences for in vivo nucleosome positioning}{Nucleic Acids Res}{Nucleic Acids Res. 2024 Jul 8;52(12):6802-6810.}{10.1093/nar/gkae468}{38828788}{PMC11229325}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11229325/}{Detect nucleosomes using Deep Learning, DeepSTARR model as SOTA.}
+
+\Pub{Cheng H, Liu L, Zhou Y, Deng K, Ge Y, Hu X.}{TSPTFBS 2.0: trans-species prediction of transcription factor binding sites and identification of their core motifs in plants}{Front Plant Sci}{Front Plant Sci. 2023 May 9;14:1175837.}{10.3389/fpls.2023.1175837}{37229121}{PMC10203575}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10203575/}{Detecting TF on plants.}
+
+\Pub{Majdandzic A, Rajesh C, Tang A, Toneyan S, Labelson E, Tripathy R, Koo PK.}{Selecting deep neural networks that yield consistent attribution-based interpretations for genomics}{Proc Mach Learn Res}{Proc Mach Learn Res. 2022 Nov;200:131-149.}{nan}{37205975}{PMC10194041}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10194041/}{K-mer histogram as attribution comparison.}
+
+\Pub{Shen Y, Kudla G, Oyarzún DA.}{Optimization of regulatory DNA with active learning}{Comput Struct Biotechnol J}{Comput Struct Biotechnol J. 2025 Oct 4;27:4384-4392.}{10.1016/j.csbj.2025.09.033}{41142759}{PMC12553016}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12553016/}{Active learning optimization in one-shot.}
+
+\Pub{Benegas G, Ye C, Albors C, Li JC, Song YS.}{Genomic Language Models: Opportunities and Challenges}{ArXiv}{ArXiv [Preprint]. 2024 Sep 22:arXiv:2407.11435v2.}{nan}{39070037}{PMC11275703}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11275703/}{Overview of Genomic Language Models}
+
+\Pub{Salvatore M, Horlacher M, Marsico A, Winther O, Andersson R.}{Transfer learning identifies sequence determinants of cell-type specific regulatory element accessibility}{NAR Genom Bioinform}{NAR Genom Bioinform. 2023 Mar 29;5(2):lqad026.}{10.1093/nargab/lqad026}{37007588}{PMC10052367}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10052367/}{Transfer learning on different species with CREs.}
+
+\Pub{Gallego Romero I, Lea AJ.}{Leveraging massively parallel reporter assays for evolutionary questions}{Genome Biol}{Genome Biol. 2023 Feb 14;24(1):26.}{10.1186/s13059-023-02856-6}{36788564}{PMC9926830}{https://pmc.ncbi.nlm.nih.gov/articles/PMC9926830/}{MPRA / STARR-seq methods description.}
+
+\Pub{Cunningham F, Allen JE, Allen J, Alvarez-Jarreta J, Amode MR, Armean IM, Austine-Orimoloye O, Azov AG, Barnes I, Bennett R, Berry A, Bhai J, Bignell A, Billis K, Boddu S, Brooks L, Charkhchi M, Cummins C, Da Rin Fioretto L, Davidson C, Dodiya K, Donaldson S, El Houdaigui B, El Naboulsi T, Fatima R, Giron CG, Genez T, Martinez JG, Guijarro-Clarke C, Gymer A, Hardy M, Hollis Z, Hourlier T, Hunt T, Juettemann T, Kaikala V, Kay M, Lavidas I, Le T, Lemos D, Marugán JC, Mohanan S, Mushtaq A, Naven M, Ogeh DN, Parker A, Parton A, Perry M, Piližota I, Prosovetskaia I, Sakthivel MP, Salam AIA, Schmitt BM, Schuilenburg H, Sheppard D, Pérez-Silva JG, Stark W, Steed E, Sutinen K, Sukumaran R, Sumathipala D, Suner MM, Szpak M, Thormann A, Tricomi FF, Urbina-Gómez D, Veidenberg A, Walsh TA, Walts B, Willhoft N, Winterbottom A, Wass E, Chakiachvili M, Flint B, Frankish A, Giorgetti S, Haggerty L, Hunt SE, IIsley GR, Loveland JE, Martin FJ, Moore B, Mudge JM, Muffato M, Perry E, Ruffier M, Tate J, Thybert D, Trevanion SJ, Dyer S, Harrison PW, Howe KL, Yates AD, Zerbino DR, Flicek P.}{Ensembl 2022}{Nucleic Acids Res}{Nucleic Acids Res. 2022 Jan 7;50(D1):D988-D995.}{10.1093/nar/gkab1049}{34791404}{PMC8728283}{https://pmc.ncbi.nlm.nih.gov/articles/PMC8728283/}{Ensembl (\url{https://www.ensembl.org}) is genomic data and annotation.}
+
+\newpage
+
+\Pub{Yang J, Zhou F, Luo X, Fang Y, Wang X, Liu X, Xiao R, Jiang D, Tang Y, Yang G, You L, Zhao Y.}{Enhancer reprogramming: critical roles in cancer and promising therapeutic strategies}{Cell Death Discov}{Cell Death Discov. 2025 Mar 3;11(1):84.}{10.1038/s41420-025-02366-3}{40032852}{PMC11876437}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11876437/}{Enhancer reprogramming using STARR-seq.}
+
+\Pub{Karshenas A, Röschinger T, Garcia HG.}{Predictive Modeling of Gene Expression and Localization of DNA Binding Site Using Deep Convolutional Neural Networks}{bioRxiv}{bioRxiv [Preprint]. 2024 Dec 20:2024.12.17.629042.}{10.1101/2024.12.17.629042}{39763851}{PMC11702772}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11702772/}{Localization of DNA Binding by MPRA.}
+
+\Pub{Du Q, Poon MN, Zeng X, Zhang P, Wei Z, Wang H, Wang Y, Wei L, Wang X.}{Synthetic promoter design in Escherichia coli based on multinomial diffusion model}{iScience}{iScience. 2024 Oct 18;27(11):111207.}{10.1016/j.isci.2024.111207}{39524356}{PMC11550136}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11550136/}{Synthetic promoters \textit{via} VAE models.}
+
+\Pub{Posfai A, Zhou J, McCandlish DM, Kinney JB.}{Gauge fixing for sequence-function relationships}{bioRxiv}{bioRxiv [Preprint]. 2024 Jun 24:2024.05.12.593772.}{10.1101/2024.05.12.593772}{38798671}{PMC11118547}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11118547/}{Gauge fixing for modeling TF.}
+
+\Pub{Nowling RJ, Njoya K, Peters JG, Riehle MM.}{Prediction accuracy of regulatory elements from sequence varies by functional sequencing technique}{Front Cell Infect Microbiol}{Front Cell Infect Microbiol. 2023 Aug 2;13:1182567.}{10.3389/fcimb.2023.1182567}{37600946}{PMC10433755}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10433755/}{Overview of functional sequencing technique.}
+
+\newpage
+
+\Pub{Rosen JD, Vasanthakumari AD, Salomon K, de Lange N, Dash PM, Keukeleire P, Hassan A, Barrera A, Kircher M, Love MI, Schubach M.}{Uniform processing and analysis of IGVF massively parallel reporter assay data with MPRAsnakeflow}{bioRxiv}{bioRxiv [Preprint]. 2025 Sep 29:2025.09.25.678548.}{10.1101/2025.09.25.678548}{41256401}{PMC12621732}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12621732/}{STARR-seq with IGVF interpretation.}
+
+\Pub{Xia Y, Du X, Liu B, Guo S, Huo YX.}{Species-specific design of artificial promoters by transfer-learning based generative deep-learning model}{Nucleic Acids Res}{Nucleic Acids Res. 2024 Jun 24;52(11):6145-6157.}{10.1093/nar/gkae429}{38783063}{PMC11194083}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11194083/}{Creating artificial promoters with transfer learning with STARR-seq.}
+
+\Pub{Harrison LJ, Bose D.}{Enhancer RNAs step forward: new insights into enhancer function}{Development}{Development. 2022 Aug 15;149(16):dev200398.}{10.1242/dev.200398}{36039999}{PMC9481971}{https://pmc.ncbi.nlm.nih.gov/articles/PMC9481971/}{Enhancer function with RNA with STARR-seq.}
+
+\Pub{Panara V, Monteiro R, Koltowska K.}{Epigenetic Regulation of Endothelial Cell Lineages During Zebrafish Development-New Insights From Technical Advances}{Front Cell Dev Biol}{Front Cell Dev Biol. 2022 May 9;10:891538.}{10.3389/fcell.2022.891538}{35615697}{PMC9125237}{https://pmc.ncbi.nlm.nih.gov/articles/PMC9125237/}{Enhancer modification in Zebrafish with STARR-seq.}
+
+\Pub{Durdu S, Iskar M, Isbel L, Hoerner L, Wirbelauer C, Burger L, Hess D, Iesmantavicius V, Schübeler D.}{Chromatin-dependent motif syntax defines differentiation trajectories}{Mol Cell}{Mol Cell. 2025 Aug 7;85(15):2900-2918.e16.}{10.1016/j.molcel.2025.07.005}{40780181}{PMC12488066}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12488066/}{DeepSTARR model and Bassset as SOTA.}
+
+\newpage
+
+\Pub{Das M, Hossain A, Banerjee D, Praul CA, Girirajan S.}{Challenges and considerations for reproducibility of STARR-seq assays}{Genome Res}{Genome Res. 2023 Apr;33(4):479-495.}{10.1101/gr.277204.122}{37130797}{PMC10234304}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10234304/}{DeepSTARR model as SOTA in enhancer prediction.}
+
+\Pub{Galupa R, Alvarez-Canales G, Borst NO, Fuqua T, Gandara L, Misunou N, Richter K, Alves MRP, Karumbi E, Perkins ML, Kocijan T, Rushlow CA, Crocker J.}{Enhancer architecture and chromatin accessibility constrain phenotypic space during Drosophila development}{Dev Cell}{Dev Cell. 2023 Jan 9;58(1):51-62.e4.}{10.1016/j.devcel.2022.12.003}{36626871}{PMC9860173}{https://pmc.ncbi.nlm.nih.gov/articles/PMC9860173/}{Enhancer in Drosophila development.}
+
+\Pub{Barral A, Déjardin J.}{The chromatin signatures of enhancers and their dynamic regulation}{Nucleus}{Nucleus. 2023 Dec;14(1):2160551.}{10.1080/19491034.2022.2160551}{36602897}{PMC9828845}{https://pmc.ncbi.nlm.nih.gov/articles/PMC9828845/}{TFs in chromatin signatures, DeepSTARR model as SOTA.}
+
+\Pub{Zhou J, Martí-Gómez C, Petti S, McCandlish DM.}{Learning sequence-function relationships with scalable, interpretable Gaussian processes}{bioRxiv}{bioRxiv [Preprint]. 2025 Aug 19:2025.08.15.670613.}{10.1101/2025.08.15.670613}{40894759}{PMC12393447}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12393447/}{ Gaussian process models for sequence-function relationships from the fitness landscape literature.}
+
+\Pub{Tang Z, Somia N, Yu Y, Koo PK.}{Evaluating the representational power of pre-trained DNA language models for regulatory genomics}{Genome Biol}{Genome Biol. 2025 Jul 14;26(1):203.}{10.1186/s13059-025-03674-8}{40660356}{PMC12261763}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12261763/}{\textbf{Overview of gLMs}}
+
+\newpage
+
+\Pub{Wang H, Xiang Y, Liu Z, Yin W, Li B, Qian L, Wang X, Lou C.}{De novo design of insulated cis-regulatory elements based on deep learning-predicted fitness landscape}{Nucleic Acids Res}{Nucleic Acids Res. 2025 Jun 20;53(12):gkaf611.}{10.1093/nar/gkaf611}{40613715}{PMC12231593}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12231593/}{\textbf{CNN} for optimizing orthogonal promoters. DeepSTARR model as SOTA.}
+
+\Pub{Murakami K, Iida K, Okada M.}{An Attention-Based Deep Neural Network Model to Detect Cis-Regulatory Elements at the Single-Cell Level From Multi-Omics Data}{Genes Cells}{Genes Cells. 2025 Mar;30(2):e70000.}{10.1111/gtc.70000}{39904740}{PMC11794194}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11794194/}{\textbf{Attention model} to predict CREs with promoter. DeepSTARR model as SOTA.}
+
+\Pub{Nasser J, Nam KM, Gunawardena J.}{A mathematical model clarifies the ABC Score formula used in enhancer-gene prediction}{bioRxiv}{bioRxiv [Preprint]. 2024 Dec 3:2024.11.29.626072.}{10.1101/2024.11.29.626072}{39677755}{PMC11642778}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11642778/}{DeepSTARR model as SOTA. Mathematical impact of enhancers.}
+
+\Pub{Kim S, Wysocka J.}{Deciphering the multi-scale, quantitative cis-regulatory code}{Mol Cell}{Mol Cell. 2023 Feb 2;83(3):373-392.}{10.1016/j.molcel.2022.12.032}{36693380}{PMC9898153}{https://pmc.ncbi.nlm.nih.gov/articles/PMC9898153/}{Biologically impact of enhacers.}
+
+\Pub{Wei Z, Hua K, Wei L, Ma S, Jiang R, Zhang X, Li Y, Wong WH, Wang X.}{NeuronMotif: Deciphering cis-regulatory codes by layer-wise demixing of deep neural networks}{Proc Natl Acad Sci U S A}{Proc Natl Acad Sci U S A. 2023 Apr 11;120(15):e2216698120.}{10.1073/pnas.2216698120}{37023129}{PMC10104575}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10104575/}{\textbf{Model} to interpret motifs in filter.}
+
+\Pub{Karollus A, Mauermeier T, Gagneur J.}{Current sequence-based models capture gene expression determinants in promoters but mostly ignore distal enhancers}{Genome Biol}{Genome Biol. 2023 Mar 27;24(1):56.}{10.1186/s13059-023-02899-9}{36973806}{PMC10045630}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10045630/}{No tool to detect distal enhancers.}
+
+\Pub{Fallon C, Ling L, Cooper BH, Ceolin S, Chiu TP, Mitra R, Mühling B, Srinivasan V, Durmaz AD, Veselinovic D, Kothari M, Fylaktakis AP, Glassford WJ, Kribelbauer-Swietek JF, Papadopoulos DK, Mann RS, Rohs R, Gompel N.}{Quantitative modulation of a spatial enhancer through the biophysical properties of a transcription factor binding site}{Sci Adv}{Sci Adv. 2026 Jan 9;12(2):eadz5902.}{10.1126/sciadv.adz5902}{41499513}{PMC12778045}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12778045/}{DeepSTARR detect motifs, biophysical impact.}
+
+\Pub{Vcelkova T, Latos PA.}{Cis-regulatory elements operating in the trophoblast}{Front Cell Dev Biol}{Front Cell Dev Biol. 2025 Nov 24;13:1661952.}{10.3389/fcell.2025.1661952}{41367498}{PMC12682753}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12682753/}{Analyse of DEV enhancers using STARR-seq.}
+
+\Pub{He X, Einarsson H, Páleníková P, Rennie S, Hu D, Cui R, Vaagensø C, Lage K, Krautz R, Andersson R.}{Genome-wide rules of transcription factor cooperativity revealed through in silico binding site ablation}{bioRxiv}{bioRxiv [Preprint]. 2025 Jun 24:2025.06.19.660093.}{10.1101/2025.06.19.660093}{40667078}{PMC12262439}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12262439/}{STARR-seq to detetct potential promoters.}
+
+\Pub{Zenker S, Wulf D, Meierhenrich A, Viehöver P, Becker S, Eisenhut M, Stracke R, Weisshaar B, Bräutigam A.}{Many transcription factor families have evolutionarily conserved binding motifs in plants}{Plant Physiol}{Plant Physiol. 2025 May 30;198(2):kiaf205.}{10.1093/plphys/kiaf205}{40408265}{PMC12142463}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12142463/}{DeepSTARR model detect motifs as example.}
+
+\Pub{Shakya SB, Edwards SV, Sackton TB.}{Convergent evolution of noncoding elements associated with short tarsus length in birds}{BMC Biol}{BMC Biol. 2025 Feb 21;23(1):52.}{10.1186/s12915-025-02156-4}{39984930}{PMC11846207}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11846207/}{DeepSTARR as SOTA.}
+
+\newpage
+
+\Pub{Friedman RZ, Ramu A, Lichtarge S, Myers CA, Granas DM, Gause M, Corbo JC, Cohen BA, White MA.}{Active learning of enhancer and silencer regulatory grammar in photoreceptors}{bioRxiv}{bioRxiv [Preprint]. 2023 Aug 22:2023.08.21.554146.}{10.1101/2023.08.21.554146}{37662358}{PMC10473580}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10473580/}{\textbf{GC} contents is highly correlated.}
+
+\Pub{Shu L, Tang J, Guan X, Zhang D.}{A comprehensive survey of genome language models in bioinformatics}{Brief Bioinform}{Brief Bioinform. 2026 Jan 7;27(1):bbaf724.}{10.1093/bib/bbaf724}{41537311}{PMC12805252}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12805252/}{DeepSTARR as SOTA. Overview of glMs.}
+
+\Pub{de Almeida BP, Dalla-Torre H, Richard G, Blum C, Hexemer L, Gélard M, Mendoza-Revilla J, Tang Z, Marin FI, Emms DM, Pandey P, Laurent S, Lopez M, Laterre A, Lang M, Şahin U, Beguir K, Pierrot T.}{Annotating the genome at single-nucleotide resolution with DNA foundation models}{Nat Methods}{Nat Methods. 2025 Nov;22(11):2301-2315.}{10.1038/s41592-025-02881-2}{41162646}{PMC12615259}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12615259/}{\textbf{SegmentNT} - DNA foundation models.}
+
+\Pub{Mannens CCA, Hu L, Lönnerberg P, Schipper M, Reagor CC, Li X, He X, Barker RA, Sundström E, Posthuma D, Linnarsson S.}{Chromatin accessibility during human first-trimester neurodevelopment}{Nature}{Nature. 2025 Nov;647(8088):179-186.}{10.1038/s41586-024-07234-1}{38693260}{PMC12589128}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12589128/}{DeepSTARR model as SOTA.}
+
+\Pub{Li J, Zhang P, Xi X, Liu L, Wei L, Wang X.}{Modeling and designing enhancers by introducing and harnessing transcription factor binding units}{Nat Commun}{Nat Commun. 2025 Feb 8;16(1):1469.}{10.1038/s41467-025-56749-2}{39922842}{PMC11807178}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11807178/}{DeepSTARR model as SOTA. Predicting enhacers by binding sites.}
+
+\newpage
+
+\Pub{Gosai SJ, Castro RI, Fuentes N, Butts JC, Kales S, Noche RR, Mouri K, Sabeti PC, Reilly SK, Tewhey R.}{Machine-guided design of synthetic cell type-specific cis-regulatory elements}{bioRxiv}{bioRxiv [Preprint]. 2023 Aug 9:2023.08.08.552077.}{10.1101/2023.08.08.552077}{37609287}{PMC10441439}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10441439/}{\textbf{CODA} - Optimizing plotform. DeepSTARR as CODA, they use Basset pre-trainig.}
+
+\Pub{Roy Chowdhury N, Ghosal D, Gurevich V, Shamay M.}{Discovering the complete enhancer map of human herpesviruses using a natural language processing model}{Nat Commun}{Nat Commun. 2025 Dec 2;17(1):186.}{10.1038/s41467-025-66861-y}{41330946}{PMC12780183}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12780183/}{Detecting human enhacers by STARR-seq.}
+
+\Pub{Metzl-Raz E, Zhao R, Deshpande S, Powell J, Porter EG, Zouaghi Y, Liu BB, Kim SH, Abdi I, Evergreen I, Agarwal M, Sheth MU, Rico J, Miyamoto M, Sanchez JM, Engreitz JM, Kundaje A, Greenleaf WJ, Gifford CA.}{Deep learning the dynamic regulatory sequence code of cardiac organoid differentiation}{bioRxiv}{bioRxiv [Preprint]. 2025 Oct 15:2025.10.15.680997.}{10.1101/2025.10.15.680997}{41279701}{PMC12632746}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12632746/}{DeepSTARR model as SOTA.}
+
+\Pub{Qiu Y, Liu L, Yan J, Xiang X, Wang S, Luo Y, Deng K, Xu J, Jin M, Wu X, Liwei Cheng, Zhou Y, Xie W, Liu HJ, Fernie AR, Hu X, Yan J.}{Precise engineering of gene expression by editing plasticity}{Genome Biol}{Genome Biol. 2025 Mar 10;26(1):51.}{10.1186/s13059-025-03516-7}{40065399}{PMC11892124}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11892124/}{\textbf{Basenji architecture}, use UMI-STARR.}
+
+\Pub{Saelens W, Pushkarev O, Deplancke B.}{ChromatinHD connects single-cell DNA accessibility and conformation to gene expression through scale-adaptive machine learning}{Nat Commun}{Nat Commun. 2025 Jan 2;16(1):317.}{10.1038/s41467-024-55447-9}{39747019}{PMC11697365}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11697365/}{DeepSTARR model finding TF.}
+
+\newpage
+
+\Pub{La Fleur A, Shi Y, Seelig G.}{Decoding biology with massively parallel reporter assays and machine learning}{Genes Dev}{Genes Dev. 2024 Oct 16;38(17-20):843-865.}{10.1101/gad.351800.124}{39362779}{PMC11535156}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11535156/}{Overview about MPRAs with STARR-seq.}
+
+\Pub{Yin C, Hair SC, Byeon GW, Bromley P, Meuleman W, Seelig G.}{Iterative deep learning-design of human enhancers exploits condensed sequence grammar to achieve cell type-specificity}{bioRxiv}{bioRxiv [Preprint]. 2024 Jun 14:2024.06.14.599076.}{10.1101/2024.06.14.599076}{38915713}{PMC11195158}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11195158/}{Fine-tuning / Retrainig model on different cells with STARR-seq.}
+
+\Pub{Kribelbauer-Swietek JF, Pushkarev O, Gardeux V, Faltejskova K, Russeil J, van Mierlo G, Deplancke B.}{Context transcription factors establish cooperative environments and mediate enhancer communication}{Nat Genet}{Nat Genet. 2024 Oct;56(10):2199-2212.}{10.1038/s41588-024-01892-7}{39363017}{PMC11525195}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11525195/}{Enhancer communication with STARR-seq.}
+
+\Pub{Taskiran II, Spanier KI, Dickmänken H, Kempynck N, Pančíková A, Ekşi EC, Hulselmans G, Ismail JN, Theunis K, Vandepoel R, Christiaens V, Mauduit D, Aerts S.}{Cell-type-directed design of synthetic enhancers}{Nature}{Nature. 2024 Feb;626(7997):212-220.}{10.1038/s41586-023-06936-2}{38086419}{PMC10830415}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10830415/}{\textbf{Therapy} by creating synthetic enhancers.}
+
+\Pub{Shkolikov A, Galitsyna A, Gelfand MS.}{Deciphering the 3D genome organization across species from Hi-C data}{Nucleic Acids Res}{Nucleic Acids Res. 2026 Jan 14;54(2):gkaf1516.}{10.1093/nar/gkaf1516}{41556344}{PMC12817080}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12817080/}{DeepSTARR model as SOTA}
+
+\Pub{Xu C, Kleinschmidt H, Yang J, Leith EM, Johnson J, Tan S, Mahony S, Bai L.}{Systematic dissection of sequence features affecting binding specificity of a pioneer factor reveals binding synergy between FOXA1 and AP-1}{Mol Cell}{Mol Cell. 2024 Aug 8;84(15):2838-2855.e10.}{10.1016/j.molcel.2024.06.022}{39019045}{PMC11334613}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11334613/}{DeepSTARR finding cooperative TFs}
+
+\Pub{Agarwal V, Inoue F, Schubach M, Penzar D, Martin BK, Dash PM, Keukeleire P, Zhang Z, Sohota A, Zhao J, Georgakopoulos-Soares I, Noble WS, Yardımcı GG, Kulakovskiy IV, Kircher M, Shendure J, Ahituv N.}{Massively parallel characterization of transcriptional regulatory elements}{Nature}{Nature. 2025 Mar;639(8054):411-420.}{10.1038/s41586-024-08430-9}{39814889}{PMC11903340}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11903340/}{Overview MPRAs in human genome.}
+
+\Pub{Yin C, Castillo-Hair S, Byeon GW, Bromley P, Meuleman W, Seelig G.}{Iterative deep learning design of human enhancers exploits condensed sequence grammar to achieve cell-type specificity}{Cell Syst}{Cell Syst. 2025 Jul 16;16(7):101302.}{10.1016/j.cels.2025.101302}{40472848}{PMC12221157}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12221157/}{\textbf{Available on 4 JUNE}}
+
+\Pub{Kowalski MH, Wessels HH, Linder J, Dalgarno C, Mascio I, Choudhary S, Hartman A, Hao Y, Kundaje A, Satija R.}{Multiplexed single-cell characterization of alternative polyadenylation regulators}{Cell}{Cell. 2024 Aug 8;187(16):4408-4425.e23.}{10.1016/j.cell.2024.06.005}{38925112}{PMC12052259}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12052259/}{Motif insertions as ablation, just like DeepSTARR.}
+
+\Pub{Leone MJ, van de Weerd R, Brown AR, Noh MC, Phan BN, Wang AZ, Corrigan KA, Yeramosu D, Sestili HH, Arokiaraj CM, Lopes BC, Cherupally VK, Fields D, Babu S, Srinivasan C, Podder R, Gadey L, Headrick D, Chen Z, Franusich ME, Dum R, Lewis DA, Mathys H, Stauffer WR, Seal RP, Pfenning AR.}{Combining Machine Learning and Multiplexed, In Situ Profiling to Engineer Cell Type and Behavioral Specificity}{bioRxiv}{bioRxiv [Preprint]. 2025 Jun 21:2025.06.20.660790.}{10.1101/2025.06.20.660790}{40667316}{PMC12262481}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12262481/}{DeepSTARR model as screening method.}
+
+\Pub{Dalal K, McAnany C, Weilert M, McKinney MC, Krueger S, Zeitlinger J.}{Interpreting regulatory mechanisms of Hippo signaling through a deep learning sequence model}{Cell Genom}{Cell Genom. 2025 Apr 9;5(4):100821.}{10.1016/j.xgen.2025.100821}{40174587}{PMC12008814}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12008814/}{DeepSTARR model as motif detection.}
+
+\Pub{Hwang H, Jeon H, Yeo N, Baek D.}{Big data and deep learning for RNA biology}{Exp Mol Med}{Exp Mol Med. 2024 Jun;56(6):1293-1321.}{10.1038/s12276-024-01243-w}{38871816}{PMC11263376}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11263376/}{Use DeepShap as DeepSTARR.}
+
+\Pub{Martyn GE, Montgomery MT, Jones H, Guo K, Doughty BR, Linder J, Chen Z, Cochran K, Lawrence KA, Munson G, Pampari A, Fulco CP, Kelley DR, Lander ES, Kundaje A, Engreitz JM.}{Rewriting regulatory DNA to dissect and reprogram gene expression}{bioRxiv}{bioRxiv [Preprint]. 2023 Dec 21:2023.12.20.572268.}{10.1101/2023.12.20.572268}{38187584}{PMC10769263}{https://pmc.ncbi.nlm.nih.gov/articles/PMC10769263/}{Random changes in \textit{loci}.}
+
+\Pub{Martyn GE, Montgomery MT, Jones H, Guo K, Doughty BR, Linder J, Bisht D, Xia F, Cai XS, Chen Z, Cochran K, Lawrence KA, Munson G, Pampari A, Fulco CP, Sahni N, Kelley DR, Lander ES, Kundaje A, Engreitz JM.}{Rewriting regulatory DNA to dissect and reprogram gene expression}{Cell}{Cell. 2025 Jun 12;188(12):3349-3366.e23.}{10.1016/j.cell.2025.03.034}{40245860}{PMC12167154}{https://pmc.ncbi.nlm.nih.gov/articles/PMC12167154/}{\textbf{Available June 12}}
+
+\Pub{Pampari A, Shcherbina A, Kvon EZ, Kosicki M, Nair S, Kundu S, Kathiria AS, Risca VI, Kuningas K, Alasoo K, Greenleaf WJ, Pennacchio LA, Kundaje A.}{ChromBPNet: bias factorized, base-resolution deep learning models of chromatin accessibility reveal cis-regulatory sequence syntax, transcription factor footprints and regulatory variants}{bioRxiv}{bioRxiv [Preprint]. 2025 Jan 8:2024.12.25.630221.}{10.1101/2024.12.25.630221}{39829783}{PMC11741299}{https://pmc.ncbi.nlm.nih.gov/articles/PMC11741299/}{\textbf{ChromBPNet} - model to detect TF.}
+\end{enumerate}
+
+\end{document}
