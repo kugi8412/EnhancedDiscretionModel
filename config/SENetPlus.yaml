@@ -1,0 +1,55 @@
+experiment_name: "SENet_Augmented"
+seed: 7898
+
+comet:
+  api_key: "V6s4QJ97ca130GE8M4G4MlU5D"
+  project_name: "kamb"
+  workspace: "kugi8412"
+
+model:
+  name: "SEResNet"
+  kwargs:
+    seq_len: 269              # 249 (oryginał) + 20 (maksymalna insercja). Dynamiczny wymiar!
+    block_num: [2, 2, 2, 2]   # Zgodnie z implementacją ResNeta
+    in_channels: 4            # Kodowanie DNA One-Hot
+
+data:
+  dataset_path: "../../data/deepSTARR"
+  batch_size: 128
+  augment: true               # WŁĄCZONA augmentacja
+  num_workers: 4              # Szybsze ładowanie dzięki wielowątkowości CPU
+  
+  # Maszyna losująca mutacje (z rozkładem Poissona)
+  evoaug:
+    max_augs_per_seq: 2
+    hard_aug: false
+    distribution: "poisson"
+    poisson_lambda: 1.0
+    augmentations:
+      - name: "RandomDeletion"
+        kwargs: {delete_min: 0, delete_max: 30}
+      - name: "RandomRC"
+        kwargs: {rc_prob: 0.5}
+      - name: "RandomInsertion"
+        kwargs: {insert_min: 0, insert_max: 20}
+      - name: "RandomTranslocation"
+        kwargs: {shift_min: 0, shift_max: 20}
+      - name: "RandomMutation"
+        kwargs: {mut_frac: 0.05}
+      - name: "NormalizeNoise"
+        kwargs: {noise_mean: 0.0, noise_std: 0.3}
+
+  target_noise:
+    apply: true
+    std: 0.05
+
+training:
+  lr: 0.001
+  weight_decay: 0.0002
+  epochs: 100
+  early_stop: 16
+  scheduler:
+    apply: true
+    type: "cosine"
+    warmup_fraction: 0.1      # Przez pierwsze 10 epok LR będzie liniowo rósł, co stabilizuje trening
+    eta_min: 1.0e-6

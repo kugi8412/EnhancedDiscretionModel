@@ -1,0 +1,70 @@
+# ==========================================
+# Konfiguracja Treningu: ReverseNet SuperKernel
+# ==========================================
+
+experiment_name: "ReverseNet_SuperKernel_Baseline"
+seed: 42
+
+# --- ARCHITEKTURA MODELU ---
+model:
+  name: "ReverseNet_SuperKernel"
+  kwargs:
+    # Parametry głębokości i szerokości (zgodne z DeepSTARR)
+    num_filters: 256
+    num_filters2: 60
+    num_filters3: 60
+    num_filters4: 120
+    # Rozmiary kerneli
+    kernel_size1: 12
+    kernel_size2: 5
+    kernel_size3: 3
+    kernel_size4: 3
+    # Parametry główne
+    dense_neurons1: 256
+    dense_neurons2: 256
+    dropout_prob: 0.6
+    pad: 'same'
+    permute_before_flatten: false
+    seq_len: 249
+
+# --- PARAMETRY TRENINGU ---
+training:
+  epochs: 100
+  batch_size: 128
+  lr: 1.0e-3                 # Wyższy startowy LR, ponieważ używamy warmupu
+  weight_decay: 1.0e-2        # Maksymalny Weight Decay
+  early_stop: 15              # Cierpliwość Early Stoppingu
+  log_dir: "train_logs/reversenet"
+  
+  # Parametry dla Oracle/VQ-VAE (wymagane przez Twój uniwersalny skrypt)
+  # Ponieważ trenujemy sam ReverseNet (Oracle) od zera, ustawiamy wagi na 0 dla VQ,
+  # a oracle_weight wymuszamy na 1.0 (lub modyfikujemy skrypt, by ignorował VQ przy treningu wyroczni).
+  oracle_warmup_epochs: 0
+  oracle_rampup_epochs: 1
+  oracle_max_weight: 1.0
+  recon_weight: 0.0
+  vq_weight: 0.0
+  oracle_bidirectional: false # Ustaw na true, jeśli chcesz liczyć Loss dla obu nici
+
+  # --- NOWY SCHEDULER (Cosine Annealing z Warmupem) ---
+  scheduler:
+    apply: true
+    type: "cosine"
+    eta_min: 1.0e-6                # Minimalny Learning Rate na końcu treningu
+    warmup_fraction: 0.1           # 10% epok (czyli pierwsze 10) to liniowy wzrost LR i WD
+    weight_decay_scheduler: true   # Aktywacja harmonogramu dla Weight Decay
+    weight_decay_min: 1.0e-6       # Minimalny Weight Decay na końcu treningu
+
+# --- DANE ---
+data:
+  dataset_path: "../../data/deepSTARR"
+  batch_size: 128
+  augment: false
+  target_noise:
+    apply: false
+
+# --- LOGOWANIE COMET.ML (Opcjonalne) ---
+comet:
+  api_key: "V6s4QJ97ca130GE8M4G4MlU5D"
+  project_name: "kamb"
+  workspace: "kugi8412"

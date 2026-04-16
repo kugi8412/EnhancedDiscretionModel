@@ -1,0 +1,64 @@
+experiment_name: "ConvNeXt_DNA_Augmented"
+seed: 7898
+
+# --- SEKCJA LOGOWANIA ---
+comet:
+  api_key: "V6s4QJ97ca130GE8M4G4MlU5D"
+  project_name: "kamb"
+  workspace: "kugi8412"
+
+# --- DEFINICJA ARCHITEKTURY CONVNEXT-DNA ---
+model:
+  name: "ConvNeXt_DNA"
+  kwargs:
+    in_ch: 4
+    # 1. DRASTYCZNE ODCHUDZENIE: Zmniejszamy bazową liczbę kanałów (stem_ch)
+    stem_ch: 48               # (Było 96) 
+    # 2. MNIEJ KANAŁÓW W GŁĘBI SIECI:
+    dims: [48, 96, 192, 384]  # (Było [96, 192, 384, 768] - redukcja parametrów o prawie 75%!)
+    # 3. PŁYTSZA SIEĆ:
+    depths: [2, 2, 6, 2]      # (Było [3, 3, 9, 3] - mniej bloków znaczy mniej miejsc na zapamiętywanie)
+    kernel_size: 11
+    # 4. SILNIEJSZY DROPOUT STOCHASTYCZNY:
+    dropout: 0.2              # (Było 0.1) Zwiększamy szum wewnątrz samych bloków
+    seq_len: 269
+
+# --- ŁADOWANIE DANYCH I AUGMENTACJE ---
+data:
+  dataset_path: "../../data/deepSTARR"
+  batch_size: 128
+  augment: true               
+  num_workers: 4              
+  
+  evoaug:
+    max_augs_per_seq: 2
+    hard_aug: false
+    distribution: "poisson"   
+    poisson_lambda: 0.5
+    augmentations:
+      - name: "RandomDeletion"
+        kwargs: {delete_min: 0, delete_max: 20}
+      # Brak RandomRC - model ma wbudowaną symetryczną fuzję RC!
+      - name: "RandomInsertion"
+        kwargs: {insert_min: 0, insert_max: 20}
+      - name: "RandomTranslocation"
+        kwargs: {shift_min: 0, shift_max: 20}
+      - name: "RandomMutation"
+        kwargs: {mut_frac: 0.05}
+      - name: "NormalizeNoise" 
+        kwargs: {noise_mean: 0.0, noise_std: 0.2}
+
+  target_noise:
+    apply: true               
+    std: 0.05
+
+training:
+  lr: 0.0005                  # ZMNIEJSZONE (Zamiast 0.005 lub 0.001 dajemy bezpieczne 5e-4)
+  weight_decay: 0.01          # ZMNIEJSZONE (Zbyt duży weight decay zerował wagi)
+  epochs: 100
+  early_stop: 20
+  scheduler:
+    apply: true
+    type: "cosine"
+    warmup_fraction: 0.1
+    eta_min: 1.0e-6

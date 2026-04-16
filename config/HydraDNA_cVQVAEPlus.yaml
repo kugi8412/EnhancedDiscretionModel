@@ -1,0 +1,50 @@
+experiment_name: "HydraDNA_cVQVAE_SOTA"
+seed: 42
+
+comet:
+  api_key: "V6s4QJ97ca130GE8M4G4MlU5D"
+  project_name: "kamb"
+  workspace: "kugi8412"
+
+model:
+  name: "HydraDNA_cVQVAE"
+  kwargs:
+    in_ch: 4
+    stem_ch: 128
+    gru_dim: 128
+    vq_dim: 64
+    num_embeddings: 2048
+    depth: 3
+
+data:
+  dataset_path: "../../data/deepSTARR"
+  batch_size: 128
+  augment: false
+  num_workers: 4              
+
+  target_noise:
+    apply: true               
+    std: 0.05
+
+training:
+  lr: 0.0005                  
+  weight_decay: 0.0001        
+  epochs: 100
+  early_stop: 20
+  oracle_warmup_epochs: 12
+  oracle_rampup_epochs: 4
+  oracle_max_weight: 1.0
+  recon_weight: 2.0
+  vq_weight: 1.0
+  oracle_bidirectional: false
+
+  scheduler:
+    apply: true
+    type: "cosine"
+    warmup_fraction: 0.1
+    eta_min: 1.0e-6
+
+oracle:
+  apply: true
+  config_path: "../../config/LegNetNewPlus.yaml" 
+  weights_path: "train_logs/LegNetV2_Augmented_seed7898.pth"

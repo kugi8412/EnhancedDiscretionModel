@@ -1,0 +1,59 @@
+experiment_name: "LegNet_Augmented"
+seed: 42
+
+comet:
+  api_key: "V6s4QJ97ca130GE8M4G4MlU5D"
+  project_name: "kamb"
+  workspace: "kugi8412"
+
+model:
+  name: "LegNet"
+  kwargs:
+    seq_len: 269              # Długość z uwzględnieniem max insercji (249 + 20)
+    in_channels: 4            # Kodowanie One-Hot
+    block_sizes: [256, 256, 128, 128, 64, 64, 32, 32] # Domyślna głębokość LegNeta
+    ks: 5                     # Rozmiar kernela (kernel_size)
+    resize_factor: 4          # Parametr z EfficientNet (rozszerzenie kanałów)
+    filter_per_group: 2
+    se_reduction: 4           # Redukcja w bloku Squeeze-and-Excitation
+
+data:
+  dataset_path: "../../data/deepSTARR"
+  batch_size: 128
+  augment: true               # WŁĄCZONA augmentacja
+  num_workers: 4              # Szybsze ładowanie (wielowątkowość)
+  
+  evoaug:
+    max_augs_per_seq: 2
+    hard_aug: false
+    distribution: "poisson"   # Rozkład Poissona dla realistycznego modelowania mutacji
+    poisson_lambda: 0.5
+    augmentations:
+      - name: "RandomDeletion"
+        kwargs: {delete_min: 0, delete_max: 20}
+      - name: "RandomRC"
+        kwargs: {rc_prob: 0.5}
+      - name: "RandomInsertion"
+        kwargs: {insert_min: 0, insert_max: 20}
+      - name: "RandomTranslocation"
+        kwargs: {shift_min: 0, shift_max: 20}
+      - name: "RandomMutation"
+        kwargs: {mut_frac: 0.05}
+      - name: "NormalizeNoise" 
+        kwargs: {noise_mean: 0.0, noise_std: 0.2}
+
+  target_noise:
+    apply: true               # Szum na etykietach skalowany do ilości mutacji
+    std: 0.05
+
+training:
+  lr: 0.0005                  # Dobry punkt startowy dla LegNeta
+  weight_decay: 0.0002
+  epochs: 100
+  early_stop: 20
+  scheduler:
+    apply: true
+    type: "cosine"
+    warmup_fraction: 0.1      # Przez pierwsze 10 epok powolny rozruch
+    eta_min: 1.0e-6
+  
