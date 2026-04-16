@@ -5,7 +5,6 @@ from .registry import register_model
 
 @register_model("DeepSTARR")
 class DeepSTARR(nn.Module):
-    # Dodajemy parametr seq_len (domyślnie 249 dla wstecznej kompatybilności)
     def __init__(self, num_filters=256, num_filters2=60, num_filters3=60, num_filters4=120,
                  kernel_size1=7, kernel_size2=3, kernel_size3=5, kernel_size4=3, 
                  dense_neurons1=256, dense_neurons2=256, dropout_prob=0.4, pad='same',
@@ -26,7 +25,6 @@ class DeepSTARR(nn.Module):
         
         self.pool = nn.MaxPool1d(kernel_size=2)
         
-        # Tuta robimy dynamiczne wyliczenie rozmiaru dla warstwy Linear!
         flattened_size = num_filters4 * (seq_len // (2**4))
         
         self.fc1 = nn.Linear(flattened_size, dense_neurons1)
@@ -60,12 +58,33 @@ class DeepSTARR(nn.Module):
         
         return out_dev, out_hk
 
+    def get_features(self, x):
+        """Extract penultimate feature vector for cross-model comparison."""
+        x = self.pool(F.relu(self.bn1(self.conv1(x))))
+        x = self.pool(F.relu(self.bn2(self.conv2(x))))
+        x = self.pool(F.relu(self.bn3(self.conv3(x))))
+        x = self.pool(F.relu(self.bn4(self.conv4(x))))
+        if self.permute_before_flatten:
+            x = x.permute(0, 2, 1)
+        x = x.reshape(x.shape[0], -1)
+        x = self.dropout(F.relu(self.bn_fc1(self.fc1(x))))
+        x = self.dropout(F.relu(self.bn_fc2(self.fc2(x))))
+        return x
+
 
 @register_model("DeepSTARR_Siamese")
 class DeepSTARR_Siamese(DeepSTARR):
-    # Podklasy używają elastycznego **kwargs, które po prostu podają dalej (do DeepSTARR)
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+    def forward_one_strand(self, x):
+        """Runs the base DeepSTARR forward pass on a single strand."""
+        return super().forward(x)
+
+    @staticmethod
+    def get_reverse_complement_tensor(x):
+        """Reverse-complement: flip channels (A<->T, C<->G) and reverse positions."""
+        return torch.flip(x, dims=[1, 2])
 
     def forward(self, x):
         dev_fwd, hk_fwd = self.forward_one_strand(x)
@@ -84,7 +103,6 @@ class DeepSTARR_2D_Fusion(DeepSTARR):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
-        # Pobieramy potrzebne parametry, by dynamicznie zbudować warstwy 2D
         num_filters = kwargs.get('num_filters', 256)
         num_filters2 = kwargs.get('num_filters2', 60)
         num_filters3 = kwargs.get('num_filters3', 60)
@@ -94,9 +112,7 @@ class DeepSTARR_2D_Fusion(DeepSTARR):
         kernel_size3 = kwargs.get('kernel_size3', 5)
         kernel_size4 = kwargs.get('kernel_size4', 3)
         dense_neurons1 = kwargs.get('dense_neurons1', 256)
-        
-        # 1. Zastępujemy wszystkie filtry 1D filtrami 2D. 
-        # padding='same' utrzymuje wymiar H=2 (obie nici) przez wszystkie warstwy.
+
         self.conv1_2d = nn.Conv2d(4, num_filters, kernel_size=(2, kernel_size1), padding='same')
         self.bn1_2d = nn.BatchNorm2d(num_filters, eps=1e-3, momentum=0.01)
         
@@ -108,43 +124,34 @@ class DeepSTARR_2D_Fusion(DeepSTARR):
         
         self.conv4_2d = nn.Conv2d(num_filters3, num_filters4, kernel_size=(2, kernel_size4), padding='same')
         self.bn4_2d = nn.BatchNorm2d(num_filters4, eps=1e-3, momentum=0.01)
-        
-        # 2. Pooling działa tylko w osi X (skraca sekwencję), ale nie rusza osi Y (nici).
+
         self.pool1_2d = nn.MaxPool2d(kernel_size=(1, 2))
         self.pool2_2d = nn.MaxPool2d(kernel_size=(1, 2))
         self.pool3_2d = nn.MaxPool2d(kernel_size=(1, 2))
         self.pool4_2d = nn.MaxPool2d(kernel_size=(1, 2))
-        
-        # Kasujemy stare warstwy 1D odziedziczone z bazowego DeepSTARR (oszczędność VRAM GPU)
+
         del self.conv1, self.bn1, self.pool1
         del self.conv2, self.bn2, self.pool2
         del self.conv3, self.bn3, self.pool3
         del self.conv4, self.bn4, self.pool4
         del self.fc1
-        
-        # 3. Nowa warstwa w pełni połączona musi przyjąć 2x więcej danych na wejściu (bo obie nici dotrwały do końca)
-        # Wymiar to: num_filters4 * 2 (nici) * (249 // 16) (długość sekwencji po poolingach)
+
         self.fc1_2d = nn.Linear(num_filters4 * 2 * (249 // (2**4)), dense_neurons1)
 
     def forward(self, x):
         x_rc = self.get_reverse_complement_tensor(x)
-        # Tworzymy tensor 2D: [Batch, Channels=4, Nici=2, Sekwencja=249]
         x = torch.stack([x, x_rc], dim=2)
         
-        # Przejście przez pełną ścieżkę 2D
         x = self.pool1_2d(F.relu(self.bn1_2d(self.conv1_2d(x))))
         x = self.pool2_2d(F.relu(self.bn2_2d(self.conv2_2d(x))))
         x = self.pool3_2d(F.relu(self.bn3_2d(self.conv3_2d(x))))
         x = self.pool4_2d(F.relu(self.bn4_2d(self.conv4_2d(x))))
         
         if self.permute_before_flatten:
-            # Dopasowanie jeśli model ma emulować wymiary wprost z Kerasa
             x = x.permute(0, 2, 3, 1)  
             
-        # Spłaszczenie do wektora 1D [Batch, features]
         x = x.reshape(x.shape[0], -1)
 
-        # Głowica gęsta, teraz korzystająca z fc1_2d
         x = self.dropout1(F.relu(self.bn_fc1(self.fc1_2d(x))))
         x = self.dropout2(F.relu(self.bn_fc2(self.fc2(x))))
         

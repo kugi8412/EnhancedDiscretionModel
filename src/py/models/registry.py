@@ -18,7 +18,6 @@ def build_model(config):
     """
     model_name = config['model']['name']
     
-    # Pobieramy argumenty modelu z sekcji kwargs w YAML (jeśli istnieją)
     model_kwargs = config['model'].get('kwargs', {})
     
     if model_name not in MODELS:
@@ -27,5 +26,4 @@ def build_model(config):
             f"Dostępne modele: {list(MODELS.keys())}"
         )
         
-    # Inicjalizacja modelu rozpakowanymi parametrami (**kwargs)
     return MODELS[model_name](**model_kwargs)
