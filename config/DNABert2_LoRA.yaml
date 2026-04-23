@@ -1,0 +1,40 @@
+experiment_name: "DNABert2_LoRA_v1"
+seed: 42
+
+comet:
+  api_key: ""
+  project_name: "kamb"
+  workspace: ""
+
+model:
+  name: "DNABert2"
+  kwargs:
+    pretrained_name: "zhihan1996/DNABERT-2-117M"
+    freeze_backbone: false
+    lora: true
+    lora_r: 8
+    lora_alpha: 16.0
+    hidden_dim: 256
+    dropout_rate: 0.2
+    pool: "cls"
+
+data:
+  dataset_path: "../../data/deepSTARR"
+  batch_size: 24
+  augment: false
+  num_workers: 0
+  strand_correct: true
+
+training:
+  lr: 1.0e-4
+  weight_decay: 1.0e-4
+  epochs: 50
+  early_stop: 12
+
+  scheduler:
+    apply: true
+    type: "cosine"
+    warmup_fraction: 0.1
+    eta_min: 1.0e-6
+
+log_dir: "train_logs"

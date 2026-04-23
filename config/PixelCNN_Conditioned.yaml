@@ -1,0 +1,51 @@
+experiment_name: "DNA_PixelCNN_Conditioned_v1"
+seed: 42
+
+comet:
+  api_key: ""
+  project_name: "kamb"
+  workspace: ""
+
+model:
+  name: "DNA_PixelCNN_Conditioned"
+  kwargs:
+    in_ch: 4
+    hidden_ch: 128
+    n_layers: 10
+    kernel_size: 5
+    vq_dim: 128           # must match the cVQVAE vq_dim checkpoint used for conditioning
+
+data:
+  dataset_path: "../../data/deepSTARR"
+  batch_size: 128
+  augment: false
+  num_workers: 4
+
+training:
+  lr: 0.0002
+  weight_decay: 0.0001
+  epochs: 80
+  early_stop: 15
+  oracle_warmup_epochs: 0
+  oracle_rampup_epochs: 0
+  oracle_max_weight: 0.0
+  recon_weight: 1.0
+  vq_weight: 0.0
+  oracle_bidirectional: false
+
+  scheduler:
+    apply: true
+    type: "cosine"
+    warmup_fraction: 0.05
+    eta_min: 1.0e-6
+
+# Provide a trained cVQVAE_MultiTask checkpoint to supply conditioning latents
+# oracle block is re-used here to load the conditioning model
+oracle:
+  apply: false
+
+latent_model:
+  config_path: "../../config/cVQVAE_MultiTask.yaml"
+  weights_path: "train_logs/cVQVAE_MultiTask.pth"
+
+log_dir: "train_logs"

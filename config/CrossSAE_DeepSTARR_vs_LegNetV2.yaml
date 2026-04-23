@@ -1,0 +1,29 @@
+# ============================================================
+# Cross SAE: DeepSTARR vs LegNetV2  —  Comparison Config
+# ============================================================
+# Focused comparison between the two main CNN architectures.
+#
+# Usage:
+#   python src/py/cross_sae.py --sae_config config/CrossSAE_DeepSTARR_vs_LegNetV2.yaml
+# ============================================================
+
+seed: 42
+
+models:
+  - name: DeepSTARR
+    config: config/DeepSTARR.yaml
+    weights: results/models/DeepSTARR/best_model.pth
+
+  - name: LegNetV2
+    config: config/LegNetPlus.yaml
+    weights: results/models/LegNet/best_model.pth
+
+data_config: config/DeepSTARR.yaml
+output_dir: results/cross_sae/deepstarr_vs_legnetv2
+
+sae:
+  hidden_dim: 512
+  l1_coeff: 1.0e-3
+  epochs: 300
+  lr: 5.0e-4
+  batch_size: 256
