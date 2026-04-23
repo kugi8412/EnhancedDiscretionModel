@@ -30,6 +30,10 @@ suppressPackageStartupMessages({
   library(data.table)
 })
 
+
+# Upload limit for 1GB
+options(shiny.maxRequestSize = 1024 * 1024^2)
+
 # User Interface
 ui <- fluidPage(
   titlePanel("Data Exploration and Baseline Analysis"),
