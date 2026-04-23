@@ -1,0 +1,11 @@
+genome:
+  symbol: "dm6"
+  chromosomes: ""   # "chr2L chr2R chr3L chr3R chrX"
+  fasta: "../../data/drosophila_genome/dm6.fa"
+
+extraction:
+  seed: 42
+  step_size: 124
+  window_size: 249
+  max_n_fraction: 0.05
+  output_file: "../../data/drosophila_genome/drosophila_deepstarr_whole.tsv"    # "../../data/drosophila_genome/drosophila_deepstarr_fragments.tsv"   

@@ -1,0 +1,38 @@
+experiment_name: "Evo2_FrozenHeads_v1"
+seed: 42
+
+comet:
+  api_key: ""
+  project_name: "kamb"
+  workspace: ""
+
+model:
+  name: "Evo2"
+  kwargs:
+    model_name: "evo2_1b_base"
+    freeze_backbone: true       # train regression heads only
+    lora: false
+    hidden_dim: 256
+    dropout_rate: 0.2
+    pool: "mean"                # mean-pool over sequence positions
+
+data:
+  dataset_path: "../../data/deepSTARR"
+  batch_size: 8                 # Evo2-1b is large; use gradient accumulation if needed
+  augment: false
+  num_workers: 0
+  strand_correct: true          # critical — Evo2 is not RC-equivariant
+
+training:
+  lr: 3.0e-4
+  weight_decay: 1.0e-4
+  epochs: 30
+  early_stop: 8
+
+  scheduler:
+    apply: true
+    type: "cosine"
+    warmup_fraction: 0.1
+    eta_min: 1.0e-6
+
+log_dir: "train_logs"
