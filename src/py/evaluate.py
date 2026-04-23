@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import torch
 from matplotlib import pyplot as plt
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, spearmanr
 
 from utils import load_config, prepare_input
 from models.registry import build_model
@@ -20,7 +20,7 @@ def adjust_axes(ax):
     ax.spines['right'].set_visible(False)
 
 def predicted_vs_observed(true, predicted, title, class_names=('dev', 'hk'), save_path=None):
-    """Generate hexbin PCC correlation plots (DeepSTARR style)."""
+    """Generate hexbin PCC/SCC correlation plots (DeepSTARR style)."""
     df_true = pd.read_csv(true, sep='\t')
     df_pred = pd.read_csv(predicted, sep='\t')
 
@@ -44,16 +44,20 @@ def predicted_vs_observed(true, predicted, title, class_names=('dev', 'hk'), sav
                        df_pred[f'Predictions_{class_names[0]}'])[0]
     pcc_hk = pearsonr(df_true[f'{class_names[1].capitalize()}_log2_enrichment'], 
                       df_pred[f'Predictions_{class_names[1]}'])[0]
+    scc_dev = spearmanr(df_true[f'{class_names[0].capitalize()}_log2_enrichment'], 
+                        df_pred[f'Predictions_{class_names[0]}'])[0]
+    scc_hk = spearmanr(df_true[f'{class_names[1].capitalize()}_log2_enrichment'], 
+                       df_pred[f'Predictions_{class_names[1]}'])[0]
 
     fig.suptitle(title, fontsize=14)
     plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.4, hspace=0.4) 
 
     if class_names == ('dev', 'hk'):
-        axes[0].set_title(f'Developmental (PCC = {pcc_dev:.3f})', fontsize=10)
-        axes[1].set_title(f'Housekeeping (PCC = {pcc_hk:.3f})', fontsize=10)
+        axes[0].set_title(f'Developmental (PCC={pcc_dev:.3f}, SCC={scc_dev:.3f})', fontsize=10)
+        axes[1].set_title(f'Housekeeping (PCC={pcc_hk:.3f}, SCC={scc_hk:.3f})', fontsize=10)
     else:
-        axes[0].set_title(f'Primary (PCC = {pcc_dev:.3f})', fontsize=10)
-        axes[1].set_title(f'Organoid (PCC = {pcc_hk:.3f})', fontsize=10)
+        axes[0].set_title(f'Primary (PCC={pcc_dev:.3f}, SCC={scc_dev:.3f})', fontsize=10)
+        axes[1].set_title(f'Organoid (PCC={pcc_hk:.3f}, SCC={scc_hk:.3f})', fontsize=10)
 
     if save_path:
         plt.savefig(save_path, bbox_inches='tight')
@@ -166,15 +170,43 @@ def evaluate_model(config_path, weights_path, set_name='Test'):
     df_true = pd.read_csv(true_filename, sep='\t')
     pcc_dev = pearsonr(df_true['Dev_log2_enrichment'], df_pred['Predictions_dev'])[0]
     pcc_hk = pearsonr(df_true['Hk_log2_enrichment'], df_pred['Predictions_hk'])[0]
+    scc_dev = spearmanr(df_true['Dev_log2_enrichment'], df_pred['Predictions_dev'])[0]
+    scc_hk = spearmanr(df_true['Hk_log2_enrichment'], df_pred['Predictions_hk'])[0]
+    mse_dev = float(np.mean((df_true['Dev_log2_enrichment'].values - df_pred['Predictions_dev'].values) ** 2))
+    mse_hk = float(np.mean((df_true['Hk_log2_enrichment'].values - df_pred['Predictions_hk'].values) ** 2))
     
     print("\n===========================================")
     print(f" EVALUATION RESULTS ({set_name}) - {model_name}")
     print("===========================================")
     print(f" PCC Developmental: {pcc_dev:.4f}")
     print(f" PCC Housekeeping:  {pcc_hk:.4f}")
+    print(f" SCC Developmental: {scc_dev:.4f}")
+    print(f" SCC Housekeeping:  {scc_hk:.4f}")
+    print(f" MSE Developmental: {mse_dev:.4f}")
+    print(f" MSE Housekeeping:  {mse_hk:.4f}")
     if len(recon_acc_list) > 0:
         print(f" Reconstruction Accuracy: {np.mean(recon_acc_list):.2f}%")
     print("===========================================\n")
+
+    # Save metrics to a JSON file alongside predictions
+    metrics = {
+        'model': model_name,
+        'set': set_name,
+        'pcc_dev': round(pcc_dev, 4),
+        'pcc_hk': round(pcc_hk, 4),
+        'scc_dev': round(scc_dev, 4),
+        'scc_hk': round(scc_hk, 4),
+        'mse_dev': round(mse_dev, 4),
+        'mse_hk': round(mse_hk, 4),
+    }
+    if len(recon_acc_list) > 0:
+        metrics['recon_acc'] = round(float(np.mean(recon_acc_list)), 2)
+
+    import json
+    metrics_path = os.path.join(out_dir, f'Metrics_{set_name}.json')
+    with open(metrics_path, 'w') as f:
+        json.dump(metrics, f, indent=2)
+    print(f"[INFO] Metrics saved to: {metrics_path}")
 
 
 if __name__ == '__main__':
