@@ -31,7 +31,7 @@ streamlit>=1.28.0
 captum>=0.7.0
 
 # Tensor decomposition (LegNet bilinear layers)
-tltorch>=0.3.0
+# tltorch>=0.3.0
 
 # HDF5 file format
 h5py>=3.9.0
