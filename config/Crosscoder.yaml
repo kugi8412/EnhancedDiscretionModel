@@ -1,0 +1,58 @@
+# ============================================================
+# Crosscoder SAE — Shared Dictionary Learning Across All Models
+# ============================================================
+# Trains a single crosscoder that jointly encodes representations
+# from multiple models, naturally discovering:
+#   - Shared features (common motifs/patterns across architectures)
+#   - Model-specific features (unique to one architecture)
+#
+# Based on: Lindsey et al. (2024) "Sparse Crosscoders for Cross-Layer
+# Features and Model Diffing" — Anthropic, Transformer Circuits Thread.
+#
+# Usage:
+#   python crosscoder_sae.py --config config/Crosscoder.yaml
+#   python crosscoder_sae.py --config config/Crosscoder.yaml --skip_motifs
+#   python crosscoder_sae.py --config config/Crosscoder.yaml --k 8
+# ============================================================
+
+seed: 42
+
+# ---- Models to compare ----
+# Add as many as you want — crosscoder scales to arbitrary model count.
+models:
+  - name: DeepSTARR
+    config: config/DeepSTARR.yaml
+    weights: results/models/DeepSTARR/best_model.pth
+
+  - name: LegNet
+    config: config/LegNetPlus.yaml
+    weights: results/models/LegNet/best_model.pth
+
+  - name: DilatedConvNeXt
+    config: config/DilatedConvNeXt.yaml
+    weights: results/models/DilatedConvNeXt/best_model.pth
+
+  - name: DeepEPI
+    config: config/DeepEPI.yaml
+    weights: results/models/DeepEPI/best_model.pth
+
+# ---- Data (shared validation set for all models) ----
+data_config: config/DeepSTARR.yaml
+
+# ---- Crosscoder hyperparameters ----
+crosscoder:
+  hidden_dim: 1024          # Dictionary size (overcomplete)
+  l1_coeff: 5.0e-4          # Sparsity penalty (L1-of-norms)
+  epochs: 300               # Training epochs
+  lr: 1.0e-3                # Learning rate (Adam + cosine annealing)
+  batch_size: 256
+  normalize_inputs: true    # Normalize each model's features to unit variance
+
+# ---- K-mer / Motif analysis ----
+motif_analysis:
+  k: 6                      # k-mer length (6 captures most TF binding sites)
+  top_features: 50          # Number of top features to analyze
+  max_samples: 3000         # Max sequences for analysis
+
+# ---- Output ----
+output_dir: results/crosscoder

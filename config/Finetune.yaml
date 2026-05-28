@@ -1,0 +1,58 @@
+# ============================================================
+# Finetune — Fine-Tuning Pretrained Models on New/Mutated Data
+# ============================================================
+# General-purpose fine-tuning config. Loads a pretrained model
+# and adapts it to new data (e.g., mutated sequences, different
+# cell types, synthetic libraries).
+#
+# Supports:
+#   - Partial freezing (freeze first N modules or by prefix)
+#   - Low learning rate with warmup for stable adaptation
+#   - Both regression (Dev/Hk) and nucleotide prediction modes
+#
+# Usage:
+#   python finetune.py -c ../../config/Finetune.yaml
+#   python finetune.py -c ../../config/Finetune.yaml --freeze-layers 3
+#   python finetune.py -c ../../config/Finetune.yaml --freeze-prefix stem blocks.0 blocks.1
+# ============================================================
+
+experiment_name: "LegNetPlus_Finetuned_Mutants"
+seed: 42
+
+model:
+  name: "LegNetPlus"
+  kwargs:
+    in_ch: 4
+    stem_ch: 256
+    ef_ks: 5
+    block_sizes: [256, 128, 128, 64, 64, 32, 32]
+    pool_sizes: [1, 2, 1, 2, 1, 2, 1]
+    expansion: 4
+    drop_path_rate: 0.1
+    seq_len: 249
+
+data:
+  # Point this to your custom/mutated dataset
+  dataset_path: "../../data/deepSTARR"
+  batch_size: 128
+  augment: false
+  num_workers: 4
+
+finetuning:
+  # Path to pretrained weights
+  pretrained_weights: "results/models/LegNet/best_model.pth"
+
+  # Model output type: 'regression' (Dev/Hk) or 'nucleotide' (B,4,L logits)
+  model_type: "regression"
+
+  # Freezing options (can also be set via CLI)
+  freeze_layers: 0             # Freeze first N top-level modules (0 = none)
+  freeze_prefix: []            # Freeze params matching these prefixes
+  # Example: freeze_prefix: ["seqextractor.stem", "seqextractor.blc0"]
+
+  # Training hyperparameters
+  lr: 0.00001                  # Very low LR for fine-tuning
+  weight_decay: 0.0001
+  epochs: 50
+  early_stop: 15
+  log_dir: "finetune_logs"

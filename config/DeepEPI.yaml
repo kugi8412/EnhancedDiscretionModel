@@ -1,0 +1,33 @@
+experiment_name: "DeepEPI"
+seed: 7898
+
+model:
+  name: "DeepEPI"
+  kwargs:
+    seq_len: 249
+    conv_filters: 128
+    conv_kernel: 15
+    pool_size: 3
+    num_heads: 8
+    dff: 256
+    dropout: 0.3
+    attention_dim: 128
+    dense_dim: 256
+    promoter_dim: 64
+
+data:
+  dataset_path: "../../data/deepSTARR"
+  batch_size: 128
+  augment: false
+
+training:
+  lr: 0.001
+  weight_decay: 0.01
+  epochs: 100
+  early_stop: 10
+  log_dir: "train_logs"
+  scheduler:
+    apply: true
+    type: "cosine"
+    warmup_fraction: 0.05
+    eta_min: 1.0e-6

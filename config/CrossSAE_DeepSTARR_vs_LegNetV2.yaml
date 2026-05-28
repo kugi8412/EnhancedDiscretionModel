@@ -1,0 +1,24 @@
+# ============================================================
+# Cross SAE: DeepSTARR vs LegNetOracle  —  Comparison Config
+# ============================================================
+
+seed: 42
+
+models:
+  - name: DeepSTARR
+    config: ../../config/DeepSTARR.yaml
+    weights: train_logs/DeepSTARR_Vanilla_seed7898.pth
+
+  - name: LegNetOracle
+    config: ../../config/LegNetOracle.yaml
+    weights: train_logs/legnet_oracle/LegNetV2_Oracle_Clean_seed7898.pth
+
+data_config: ../../config/DeepSTARR.yaml
+output_dir: results/cross_sae/deepstarr_vs_legnet
+
+sae:
+  hidden_dim: 512
+  l1_coeff: 1.0e-3
+  epochs: 300
+  lr: 5.0e-4
+  batch_size: 256

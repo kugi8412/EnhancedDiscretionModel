@@ -1,0 +1,67 @@
+# ==========================================
+# Konfiguracja Treningu: BassetNetwork + EvoAug + SuperKernel
+# ==========================================
+
+experiment_name: "BassetNetwork_EvoAug_SuperKernel"
+seed: 42
+
+# --- ARCHITEKTURA MODELU ---
+model:
+  name: "BassetNetwork"
+  kwargs:
+    seq_len: 249
+    # Klasyczne parametry konwolucyjne Basseta
+    num_channels: [300, 200, 200]
+    kernel_widths: [19, 11, 7]
+    pooling_widths: [3, 4, 4]
+    # Fully Connected head parameters
+    num_units: [1000, 2]
+    dropout: 0.3
+
+# --- PARAMETRY TRENINGU ---
+training:
+  epochs: 100
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  early_stop: 15
+  log_dir: "train_logs"
+
+  scheduler:
+    apply: true
+    type: "cosine"
+    eta_min: 1.0e-6
+    warmup_fraction: 0.10
+    weight_decay_scheduler: true
+    weight_decay_min: 1.0e-6
+
+# --- DANE & AUGMENTACJA EVO-AUG ---
+data:
+  dataset_path: "../../data/deepSTARR"
+  batch_size: 128
+  augment: true
+  
+  # Integrated EvoAug augmentation block
+  evoaug:
+    max_augs_per_seq: 2
+    hard_aug: false
+    distribution: "poisson"
+    poisson_lambda: 1.0
+    augmentations:
+      - name: "RandomDeletion"
+        kwargs: {delete_min: 0, delete_max: 30}
+      - name: "RandomRC"
+        kwargs: {rc_prob: 0.5}
+      - name: "RandomInsertion"
+        kwargs: {insert_min: 0, insert_max: 20}
+      - name: "RandomTranslocation"
+        kwargs: {shift_min: 0, shift_max: 20}
+      - name: "RandomMutation"
+        kwargs: {mut_frac: 0.05}
+      - name: "NormalizeNoise"
+        kwargs: {noise_mean: 0.0, noise_std: 0.3}
+
+# --- LOGOWANIE COMET.ML ---
+comet:
+  api_key: ""
+  project_name: "kamb"
+  workspace: ""

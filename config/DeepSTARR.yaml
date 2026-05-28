@@ -1,0 +1,40 @@
+experiment_name: "DeepSTARR_Vanilla"
+seed: 7898
+
+comet:
+  api_key: ""                 # Set your Comet ML API key here
+  project_name: "kamb"
+  workspace: ""
+
+model:
+  name: "DeepSTARR"
+  kwargs:
+    seq_len: 249              # No augmentation, so sequence length stays at 249
+    kernel_size1: 7
+    kernel_size2: 3
+    kernel_size3: 5
+    kernel_size4: 3
+    num_filters: 256
+    num_filters2: 60
+    num_filters3: 60
+    num_filters4: 120
+    dropout_prob: 0.4
+    dense_neurons1: 256
+    dense_neurons2: 256
+    pad: 'same'
+    permute_before_flatten: false
+
+data:
+  dataset_path: "../../data/deepSTARR"
+  batch_size: 128
+  augment: false
+  target_noise:
+    apply: false
+
+training:
+  lr: 0.002
+  epochs: 100
+  early_stop: 10
+  log_dir: "train_logs"
+  scheduler:
+    apply: false              # Constant learning rate

@@ -1,0 +1,74 @@
+# ============================================================
+# cVQVAE_Asymmetric — Fully Configurable Asymmetric Encoder/Decoder
+# ============================================================
+# Heavy encoder (4 stages, widening channels) with lightweight decoder
+# (2 stages, narrower). GRU can be independently enabled/disabled.
+#
+# Usage:
+#   python train_vq.py -c ../../config/cVQVAE_Asymmetric.yaml
+# ============================================================
+
+experiment_name: "cVQVAE_Asymmetric_v1"
+seed: 42
+
+model:
+  name: "cVQVAE_Asymmetric"
+  kwargs:
+    in_ch: 4
+    stem_ch: 192
+    gru_dim: 192
+    vq_dim: 128
+    num_embeddings: 4096
+    commitment_cost: 0.25
+    classifier_dim: 256
+    dropout_rate: 0.2
+    film_hidden: 128
+    uncond_dropout_rate: 0.15
+
+    # --- Asymmetric encoder (heavy) ---
+    encoder:
+      depth: 4
+      channels: [192, 256, 256, 384]   # widening: more capacity deeper
+      kernel_size: 5
+      use_gru: true                     # BiGRU for long-range context
+
+    # --- Asymmetric decoder (light) ---
+    decoder:
+      depth: 2
+      channels: [192, 128]             # narrower, fewer stages
+      kernel_size: 5
+      use_gru: true
+
+data:
+  dataset_path: "../../data/deepSTARR"
+  batch_size: 64
+  augment: true
+  num_workers: 4
+
+  target_noise:
+    apply: true
+    std: 0.05
+
+training:
+  lr: 0.0003
+  weight_decay: 0.0001
+  epochs: 150
+  early_stop: 25
+  oracle_warmup_epochs: 16
+  oracle_rampup_epochs: 6
+  oracle_max_weight: 0.75
+  recon_weight: 2.0
+  vq_weight: 1.0
+  oracle_bidirectional: true
+  log_dir: "train_logs"
+
+  scheduler:
+    apply: true
+    type: "cosine"
+    warmup_fraction: 0.08
+    eta_min: 1.0e-6
+
+oracle:
+  apply: true
+  config_path: "../../config/LegNetNewPlus.yaml"
+  weights_path: "train_logs/LegNetV2_Augmented_seed7898.pth"

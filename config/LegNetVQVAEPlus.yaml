@@ -1,0 +1,46 @@
+experiment_name: "LegNet_VQVAE_Joint_NoWarmup"
+seed: 7898
+
+comet:
+  api_key: ""
+  project_name: "kamb"
+  workspace: ""
+
+model:
+  name: "LegNet_VQVAE"
+  kwargs:
+    in_ch: 4
+    stem_ch: 128              
+    vq_dim: 64                
+    num_embeddings: 2048      
+    depth: 2            
+
+data:
+  dataset_path: "../../data/deepSTARR"
+  batch_size: 128
+  augment: false
+  num_workers: 4              
+
+  target_noise:
+    apply: true               
+    std: 0.05
+
+training:
+  lr: 0.0005                  
+  weight_decay: 0.0001        
+  epochs: 100
+  early_stop: 20
+  
+  oracle_warmup_epochs: -1
+  oracle_rampup_epochs: 0
+
+  oracle_max_weight: 1.0
+  recon_weight: 5.0
+  vq_weight: 1.0
+  
+  scheduler:
+    apply: true
+    type: "cosine"
+    warmup_fraction: 0.1      
+    eta_min: 1.0e-6
+  

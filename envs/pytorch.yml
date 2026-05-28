@@ -19,4 +19,7 @@ dependencies:
   - networkx
   - pyyaml
   - tqdm
+  - streamlit
+  - causal-conv1d
+  - mamba-ssm
   - pip

@@ -1,0 +1,39 @@
+experiment_name: "LegNetPlus_Regularized"
+seed: 7898
+
+comet:
+  api_key: ""
+  project_name: "kamb"
+  workspace: ""
+
+model:
+  name: "LegNetPlus"
+  kwargs:
+    in_ch: 4
+    stem_ch: 256
+    ef_ks: 5
+    block_sizes: [256, 128, 128, 64, 64, 32, 32]
+    pool_sizes: [1, 2, 1, 2, 1, 2, 1]
+    expansion: 4
+    drop_path_rate: 0.2 
+    seq_len: 249
+
+data:
+  dataset_path: "../../data/deepSTARR"
+  batch_size: 128
+  augment: false 
+  num_workers: 4
+
+  target_noise:
+    apply: false
+
+training:
+  lr: 0.0002 
+  weight_decay: 0.001 
+  
+  epochs: 100
+  early_stop: 16
+  log_dir: "train_logs"
+  
+  scheduler:
+    apply: false

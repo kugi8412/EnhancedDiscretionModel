@@ -1,0 +1,57 @@
+# ==========================================
+# Oracle Training Configuration (LegNetV2)
+# ==========================================
+
+experiment_name: "LegNetV2_Oracle_Clean"
+seed: 7898
+
+comet:
+  api_key: ""                 # Set your Comet ML API key here
+  project_name: "kamb"
+  workspace: ""
+
+# --- Model Architecture ---
+model:
+  name: "LegNetV2"
+  kwargs:
+    in_ch: 4
+    stem_ch: 256
+    stem_ks: 5
+    ef_ks: 5
+    ef_block_sizes: [256, 128, 128, 64, 64, 32, 32]
+    pool_sizes: [1, 2, 1, 2, 1, 2, 1]
+    resize_factor: 4
+
+# --- Data (clean, no augmentation) ---
+data:
+  dataset_path: "../../data/deepSTARR"
+  batch_size: 128
+  augment: false
+  target_noise:
+    apply: false
+
+# --- Training Parameters ---
+training:
+  epochs: 100
+  batch_size: 128
+  lr: 5.0e-4
+  weight_decay: 2.0e-3       # Stronger regularisation without augmentation
+  early_stop: 8
+  log_dir: "train_logs/legnet_oracle"
+
+  # No VQ-VAE components (pure oracle training)
+  oracle_warmup_epochs: 0
+  oracle_rampup_epochs: 1
+  oracle_max_weight: 1.0
+  recon_weight: 0.0
+  vq_weight: 0.0
+  oracle_bidirectional: false
+
+  # LR Scheduler
+  scheduler:
+    apply: false
+    type: "cosine"
+    eta_min: 1.0e-6
+    warmup_fraction: 0.10
+    weight_decay_scheduler: true
+    weight_decay_min: 1.0e-6
