@@ -12,18 +12,13 @@ model:
   name: "ConvNeXt_DNA"
   kwargs:
     in_ch: 4
-    # 1. Reduced base channel count (stem_ch)
-    stem_ch: 48               # (was 96) 
-    # 2. Fewer channels in deeper stages:
-    dims: [48, 96, 192, 384]  # (was [96, 192, 384, 768] — ~75% parameter reduction)
-    # 3. Shallower network:
-    depths: [2, 2, 6, 2]      # (was [3, 3, 9, 3] — fewer blocks = less memorization)
+    stem_ch: 48
+    dims: [48, 96, 192, 384]
+    depths: [2, 2, 6, 2]
     kernel_size: 11
-    # 4. SILNIEJSZY DROPOUT STOCHASTYCZNY:
-    dropout: 0.2              # (was 0.1) Increased intra-block noise
+    dropout: 0.2
     seq_len: 269
 
-# --- DATA LOADING AND AUGMENTATION ---
 data:
   dataset_path: "../../data/deepSTARR"
   batch_size: 128
@@ -38,7 +33,6 @@ data:
     augmentations:
       - name: "RandomDeletion"
         kwargs: {delete_min: 0, delete_max: 20}
-      # No RandomRC — model has built-in symmetric RC fusion
       - name: "RandomInsertion"
         kwargs: {insert_min: 0, insert_max: 20}
       - name: "RandomTranslocation"
@@ -53,8 +47,8 @@ data:
     std: 0.05
 
 training:
-  lr: 0.0005                  # ZMNIEJSZONE (Zamiast 0.005 lub 0.001 dajemy bezpieczne 5e-4)
-  weight_decay: 0.01          # Reduced (excessive weight decay was zeroing weights)
+  lr: 0.0005
+  weight_decay: 0.01
   epochs: 100
   early_stop: 20
   scheduler:

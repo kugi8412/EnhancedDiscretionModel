@@ -1,27 +1,40 @@
-experiment_name: "cVQVAE_MultiTask_v1"
+# ============================================================
+# cVQVAE_Asymmetric — Fully Configurable Asymmetric Encoder/Decoder
+# Heavy encoder (4 stages, widening channels) with lightweight decoder
+# (2 stages, narrower). GRU can be independently enabled/disabled.
+#
+# Usage:
+#   python train_vq.py -c ../../config/cVQVAE_Asymmetric.yaml
+# ============================================================
+
+experiment_name: "cVQVAE_Asymmetric_v1"
 seed: 42
 
-comet:
-  api_key: ""
-  project_name: "kamb"
-  workspace: ""
-
 model:
-  name: "cVQVAE_MultiTask"
+  name: "cVQVAE_Asymmetric"
   kwargs:
     in_ch: 4
     stem_ch: 192
     gru_dim: 192
     vq_dim: 128
     num_embeddings: 4096
-    encoder_depth: 4
-    decoder_depth: 2
     commitment_cost: 0.25
     classifier_dim: 256
     dropout_rate: 0.2
-    kernel_size: 5
     film_hidden: 128
     uncond_dropout_rate: 0.15
+
+    encoder:
+      depth: 4
+      channels: [192, 256, 256, 384]
+      kernel_size: 5
+      use_gru: true
+
+    decoder:
+      depth: 2
+      channels: [192, 128]
+      kernel_size: 5
+      use_gru: true
 
 data:
   dataset_path: "../../data/deepSTARR"

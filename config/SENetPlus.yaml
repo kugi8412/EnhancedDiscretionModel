@@ -9,17 +9,16 @@ comet:
 model:
   name: "SEResNet"
   kwargs:
-    seq_len: 269              # 249 (original) + 20 (max insertion). Dynamic dimension.
-    block_num: [2, 2, 2, 2]   # Following ResNet implementation
-    in_channels: 4            # Kodowanie DNA One-Hot
+    seq_len: 269              # 249 (original) + 20 (max insertion).
+    block_num: [2, 2, 2, 2]
+    in_channels: 4
 
 data:
   dataset_path: "../../data/deepSTARR"
   batch_size: 128
-  augment: true               # Augmentation ENABLED
-  num_workers: 4              # Faster loading with CPU multithreading
-  
-  # Augmentation engine (Poisson distribution)
+  augment: true
+  num_workers: 4
+
   evoaug:
     max_augs_per_seq: 2
     hard_aug: false
@@ -48,8 +47,9 @@ training:
   weight_decay: 0.0002
   epochs: 100
   early_stop: 16
+  log_dir: "train_logs"
   scheduler:
     apply: true
     type: "cosine"
-    warmup_fraction: 0.1      # LR ramps linearly for first 10 epochs to stabilize training
+    warmup_fraction: 0.1
     eta_min: 1.0e-6

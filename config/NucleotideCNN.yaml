@@ -1,0 +1,77 @@
+# ============================================================
+# NucleotideCNN — Per-Position Nucleotide Probability Predictor
+# ============================================================
+# Trains a PixelCNN-like causal head on top of a FROZEN backbone.
+# Predicts p(A,C,G,T) at every position => natural uncertainty.
+#
+# Training loss: cross-entropy on true nucleotide identity at each pos.
+# The backbone provides context features but is NEVER updated.
+#
+# Applications:
+#   - Per-position uncertainty (entropy map)
+#   - MC Dropout uncertainty (variance across stochastic passes)
+#   - MSE-based uncertainty (prediction vs actual)
+#   - Single nucleotide variant effect scoring
+#   - Sequence quality / naturalness scoring
+#   - MLP predictor from latent features → expression
+#   - Active learning on most uncertain sequences
+#
+# Usage:
+#   python train_nucleotide.py -c ../../config/NucleotideCNN.yaml
+#   python train_nucleotide.py -c ../../config/NucleotideCNN.yaml --train-mlp
+#   python train_nucleotide.py -c ../../config/NucleotideCNN.yaml --uncertainty --uncertainty-method combined
+#   python train_nucleotide.py -c ../../config/NucleotideCNN.yaml --active-learning --al-rounds 3
+# ============================================================
+
+experiment_name: "NucleotideCNN_LegNet_v1"
+seed: 42
+
+model:
+  name: "NucleotideCNN"
+  kwargs:
+    seq_len: 249
+    hidden_ch: 128             # Head width
+    n_layers: 6                # Gated residual blocks
+    kernel_size: 5             # Causal convolution kernel
+    dropout: 0.1
+    max_layers: 8              # Max backbone layers to tap
+    freeze_backbone: true      # Backbone is frozen (default)
+    mc_samples: 20             # MC Dropout forward passes for uncertainty
+
+    # Frozen backbone (pre-trained model to extract features from)
+    backbone_config: "../../config/LegNetPlus.yaml"
+    backbone_weights: "results/models/LegNet/best_model.pth"
+
+    # layer_names:
+    #   - seqextractor.blc0
+    #   - seqextractor.inv_res_blc0
+    #   - seqextractor.inv_res_blc1
+    #   - seqextractor.inv_res_blc2
+
+data:
+  dataset_path: "../../data/deepSTARR"
+  batch_size: 128
+  augment: false
+  num_workers: 4
+
+training:
+  lr: 0.0005
+  weight_decay: 0.0001
+  epochs: 80
+  early_stop: 15
+  log_dir: "train_logs"
+
+  scheduler:
+    apply: true
+    type: "cosine"
+    warmup_fraction: 0.05
+    eta_min: 1.0e-6
+
+# MLP Predictor settings (used with --train-mlp flag)
+mlp_predictor:
+  hidden_dims: [256, 128]
+  lr: 0.001
+  epochs: 100
+  dropout: 0.1
+  early_stop: 20
+  batch_size: 256

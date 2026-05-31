@@ -1,6 +1,5 @@
 # ============================================================
 # Cross SAE Multi-Layer: DeepSTARR vs LegNet  — Layer-wise Comparison
-# ============================================================
 # Extracts activations from ALL layers of both models, computes CKA
 # heatmaps to reveal which layers learn similar representations,
 # and optionally trains SAEs on the most similar layer pairs.
@@ -24,32 +23,10 @@ models:
     config: config/DeepSTARR.yaml
     weights: src/py/train_logs/DeepSTARR_Vanilla_seed7898.pth
     # Optional: specify which layers to capture (default: auto-detect).
-    # Use model.named_modules() names. Examples for DeepSTARR:
-    # layers:
-    #   - conv1
-    #   - bn1
-    #   - conv2
-    #   - bn2
-    #   - conv3
-    #   - bn3
-    #   - conv4
-    #   - bn4
-    #   - fc1
-    #   - fc2
 
   - name: LegNet
     config: config/LegNetPlus.yaml
     weights: src/py/train_logs/LegNet_Augmented_seed42.pth
-    # For LegNet the backbone uses ModuleDict, example layers:
-    # layers:
-    #   - seqextractor.blc0
-    #   - seqextractor.inv_res_blc0
-    #   - seqextractor.resize_blc0
-    #   - seqextractor.inv_res_blc1
-    #   - seqextractor.resize_blc1
-    #   - seqextractor.inv_res_blc2
-    #   - seqextractor.resize_blc2
-    #   - mapper
 
 data_config: config/DeepSTARR.yaml
 output_dir: results/cross_sae_multilayer

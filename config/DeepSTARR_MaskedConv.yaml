@@ -10,15 +10,13 @@
 # which filters benefit from wide vs. narrow receptive fields.
 #
 # tau controls boundary sharpness:
-#   tau = 5   → smooth transition (default, good for training stability)
-#   tau = 20  → near-binary mask (harder, more structural inductive bias)
+#   tau = 5   smooth transition (default, good for training stability)
+#   tau = 20  near-binary mask (harder, more structural inductive bias)
 #
 # r (0–1) is the initial radius fraction of the kernel half-width:
-#   r = 1.0   → full kernel active at init (no initial masking)
-#   r = 0.5   → inner half of kernel active at init
+#   r = 1.0   full kernel active at init (no initial masking)
+#   r = 0.5   inner half of kernel active at init
 #
-# Pointwise conv (kernel_size=1) layers are skipped by default because
-# masking a single-element kernel has no effect.
 
 experiment_name: "DeepSTARR_MaskedConv"
 seed: 7898
@@ -46,11 +44,10 @@ model:
     pad: 'same'
     permute_before_flatten: false
 
-  # ── Masked Convolution ──────────────────────────────────────────────
   mask_conv:
     enabled: true
     r: 0.7              # initial radius: start at 70% of kernel half-width
-    tau: 5.0            # sigmoid sharpness (higher → harder boundary)
+    tau: 5.0            # sigmoid sharpness (higher => harder boundary)
     trainable: true     # radius updated by backprop
     skip_depthwise: false
     skip_pointwise: true

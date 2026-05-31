@@ -1,56 +1,40 @@
-# ==========================================
-# Konfiguracja Treningu: BassetNetwork + EvoAug + SuperKernel
-# ==========================================
+# BassetNetwork + EvoAug + SuperKernel
 
 experiment_name: "BassetNetwork_EvoAug_SuperKernel"
 seed: 42
 
-# --- ARCHITEKTURA MODELU ---
+# Architecture
 model:
   name: "BassetNetwork"
   kwargs:
     seq_len: 249
-    # Klasyczne parametry konwolucyjne Basseta
     num_channels: [300, 200, 200]
     kernel_widths: [19, 11, 7]
     pooling_widths: [3, 4, 4]
-    # Fully Connected head parameters
     num_units: [1000, 2]
     dropout: 0.3
 
-# --- PARAMETRY TRENINGU ---
 training:
   epochs: 100
-  batch_size: 128
   lr: 1.0e-3
-  weight_decay: 1.0e-4            # Reduced WD (1e-4) since EvoAug already provides strong regularization
+  weight_decay: 1.0e-4
   early_stop: 15
-  log_dir: "train_logs/basset"
-  
-  # Ustawienia pod uniwersalny skrypt 
-  oracle_warmup_epochs: 0
-  oracle_rampup_epochs: 1
-  oracle_max_weight: 1.0
-  recon_weight: 0.0
-  vq_weight: 0.0
-  oracle_bidirectional: false
+  log_dir: "train_logs"
 
-  # Scheduler with gentle warmup
   scheduler:
     apply: true
     type: "cosine"
     eta_min: 1.0e-6
-    warmup_fraction: 0.10         # 10% of epochs for LR warmup
+    warmup_fraction: 0.10
     weight_decay_scheduler: true
     weight_decay_min: 1.0e-6
 
-# --- DANE & AUGMENTACJA EVO-AUG ---
 data:
   dataset_path: "../../data/deepSTARR"
   batch_size: 128
   augment: true
   
-  # Integrated EvoAug augmentation block
+  # Augmentation
   evoaug:
     max_augs_per_seq: 2
     hard_aug: false
@@ -70,7 +54,7 @@ data:
       - name: "NormalizeNoise"
         kwargs: {noise_mean: 0.0, noise_std: 0.3}
 
-# --- LOGOWANIE COMET.ML ---
+# Logging for COMET
 comet:
   api_key: ""
   project_name: "kamb"

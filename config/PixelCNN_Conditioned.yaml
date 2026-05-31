@@ -38,14 +38,12 @@ training:
     type: "cosine"
     warmup_fraction: 0.05
     eta_min: 1.0e-6
+  log_dir: "train_logs"
 
 # Provide a trained cVQVAE_MultiTask checkpoint to supply conditioning latents
-# oracle block is re-used here to load the conditioning model
 oracle:
   apply: false
 
 latent_model:
   config_path: "../../config/cVQVAE_MultiTask.yaml"
   weights_path: "train_logs/cVQVAE_MultiTask.pth"
-
-log_dir: "train_logs"

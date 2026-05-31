@@ -10,8 +10,8 @@ model:
   name: "SEResNet"
   kwargs:
     seq_len: 249
-    block_num: [2, 2, 2, 2]   # Following ResNet implementation
-    in_channels: 4            # Kodowanie DNA One-Hot
+    block_num: [2, 2, 2, 2]
+    in_channels: 4
 
 data:
   dataset_path: "../../data/deepSTARR"
@@ -27,6 +27,7 @@ training:
   weight_decay: 1e-5
   epochs: 100
   early_stop: 10
+  log_dir: "train_logs"
   scheduler:
     apply: true
     type: "cosine"

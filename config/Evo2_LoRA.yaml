@@ -30,11 +30,10 @@ training:
   weight_decay: 1.0e-4
   epochs: 40
   early_stop: 10
+  log_dir: "train_logs"
 
   scheduler:
     apply: true
     type: "cosine"
     warmup_fraction: 0.15
     eta_min: 1.0e-7
-
-log_dir: "train_logs"

@@ -1,6 +1,4 @@
-# ============================================================
-# Cross SAE: DeepSTARR vs LegNetOracle  —  Comparison Config
-# ============================================================
+# Cross SAE: DeepSTARR vs LegNetOracle
 
 seed: 42
 

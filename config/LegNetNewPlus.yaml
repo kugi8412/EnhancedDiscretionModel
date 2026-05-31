@@ -51,6 +51,7 @@ training:
   weight_decay: 0.0002
   epochs: 100
   early_stop: 20
+  log_dir: "train_logs"
   scheduler:
     apply: false
     type: "cosine"

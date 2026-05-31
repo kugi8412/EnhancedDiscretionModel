@@ -1,8 +1,4 @@
 # LegNetPlus + Masked Convolution + Channel Attention (combined)
-#
-# Demonstrates combining both modifications on a different backbone.
-# Masked conv learns per-filter receptive fields; channel attention
-# learns globally-important feature channels — both are trained jointly.
 
 experiment_name: "LegNetPlus_MaskedConv_Attention"
 seed: 42
@@ -24,16 +20,16 @@ model:
     expansion: 4
     drop_path_rate: 0.1
 
-  # ── Masked Convolution ──────────────────────────────────────────────
+  # Masked Convolution
   mask_conv:
     enabled: true
-    r: 1.0              # start at full kernel (no initial masking bias)
+    r: 1.0              # start at full kernel
     tau: 5.0
     trainable: true
     skip_depthwise: true   # skip depthwise convs inside GLU blocks
     skip_pointwise: true
 
-  # ── Learnable Channel Attention ─────────────────────────────────────
+  # Learnable Channel Attention
   attention:
     enabled: true
     type: "channel"

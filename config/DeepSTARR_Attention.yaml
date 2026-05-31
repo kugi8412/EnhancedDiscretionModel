@@ -1,5 +1,4 @@
 # DeepSTARR + Learnable Attention
-#
 # A purely-parametric (input-independent) attention tensor is inserted
 # immediately after each Conv1d layer.  No input projection is performed —
 # the weights are directly trained scalars that the network learns to set.
@@ -17,10 +16,6 @@
 #               Requires seq_len to be set.
 #
 #   both      – enables both channel and position together.
-#
-# When the actual spatial dimension at runtime differs from seq_len (e.g.
-# after augmentation-induced length changes), the position weights are
-# linearly interpolated automatically.
 
 experiment_name: "DeepSTARR_Attention"
 seed: 7898
@@ -48,11 +43,10 @@ model:
     pad: 'same'
     permute_before_flatten: false
 
-  # ── Learnable Attention ─────────────────────────────────────────────
   attention:
     enabled: true
     type: "channel"     # "channel" | "position" | "both"
-    seq_len: 249        # required when type is "position" or "both"
+    seq_len: 249
     skip_pointwise: true
     skip_depthwise: false
 

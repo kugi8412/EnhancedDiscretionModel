@@ -34,7 +34,7 @@ data:
   evoaug:
     max_augs_per_seq: 2
     hard_aug: false
-    distribution: "poisson"     # Zmienione na Poissona
+    distribution: "poisson"
     poisson_lambda: 0.5            
     augmentations:
       - name: "RandomDeletion"
@@ -51,13 +51,14 @@ data:
         kwargs: {noise_mean: 0.0, noise_std: 0.2}
 
   target_noise:
-    apply: true       # Target noise ENABLED
-    std: 0.05         # Scales with number of augmentations applied
+    apply: true
+    std: 0.05
 
 training:
   lr: 0.002
   epochs: 100
   early_stop: 10
+  log_dir: "train_logs"
   scheduler:          
     apply: true
     type: "cosine"

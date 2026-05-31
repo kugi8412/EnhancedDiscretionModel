@@ -35,5 +35,6 @@ training:
   lr: 0.002
   epochs: 100
   early_stop: 10
+  log_dir: "train_logs"
   scheduler:
     apply: false              # Constant learning rate

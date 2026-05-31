@@ -1,56 +1,38 @@
-# ==========================================
-# Konfiguracja Treningu: CustomNetwork + EvoAug
-# ==========================================
+# CustomNetwork + EvoAug
 
 experiment_name: "CustomNetwork_EvoAug_SuperKernel"
 seed: 42
 
-# --- ARCHITEKTURA MODELU ---
 model:
   name: "CustomNetwork"
   kwargs:
     seq_len: 249
-    # Parametry warstw konwolucyjnych (SuperKernel)
     num_channels: [300, 200, 200]
     kernel_widths: [19, 11, 7]
     pooling_widths: [3, 4, 4]
-    # Fully Connected head parameters
     num_units: [2000, 2]
     dropout: 0.5
 
-# --- PARAMETRY TRENINGU ---
 training:
   epochs: 100
-  batch_size: 128
   lr: 1.0e-3
-  weight_decay: 1.0e-3            # Higher weight_decay for better generalization
+  weight_decay: 1.0e-3
   early_stop: 15
-  log_dir: "train_logs/regseqnet"
-  
-  # Settings for universal training script (VQ-VAE disabled, pure prediction)
-  oracle_warmup_epochs: 0
-  oracle_rampup_epochs: 1
-  oracle_max_weight: 1.0
-  recon_weight: 0.0
-  vq_weight: 0.0
-  oracle_bidirectional: false
+  log_dir: "train_logs"
 
-  # Scheduler z Warmupem i oddzielnym Weight Decay
   scheduler:
     apply: true
     type: "cosine"
     eta_min: 1.0e-6
-    warmup_fraction: 0.05         # Linear warmup for smoother start
+    warmup_fraction: 0.05
     weight_decay_scheduler: true
     weight_decay_min: 1.0e-6
 
-# --- DANE & AUGMENTACJA EVO-AUG ---
 data:
   dataset_path: "../../data/deepSTARR"
   batch_size: 128
   augment: true
   
-  # Zintegrowany blok augmentacji biologicznej:
   evoaug:
     max_augs_per_seq: 2
     hard_aug: false

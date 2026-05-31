@@ -1,25 +1,19 @@
-# ==========================================
-# Konfiguracja Treningu: ReverseNet SuperKernel
-# ==========================================
+# ReverseNet + SuperKernel Baseline
 
 experiment_name: "ReverseNet_SuperKernel_Baseline"
 seed: 42
 
-# --- ARCHITEKTURA MODELU ---
 model:
   name: "ReverseNet_SuperKernel"
   kwargs:
-    # Depth and width parameters (DeepSTARR-compatible)
     num_filters: 256
     num_filters2: 60
     num_filters3: 60
     num_filters4: 120
-    # Rozmiary kerneli
     kernel_size1: 12
     kernel_size2: 5
     kernel_size3: 3
     kernel_size4: 3
-    # Main parameters
     dense_neurons1: 256
     dense_neurons2: 256
     dropout_prob: 0.6
@@ -27,35 +21,21 @@ model:
     permute_before_flatten: false
     seq_len: 249
 
-# --- PARAMETRY TRENINGU ---
 training:
   epochs: 100
-  batch_size: 128
-  lr: 1.0e-3                 # Higher initial LR since warmup is used
-  weight_decay: 1.0e-2        # Maksymalny Weight Decay
-  early_stop: 15              # Early stopping patience
-  log_dir: "train_logs/reversenet"
-  
-  # Oracle/VQ-VAE parameters (required by the universal training script)
-  # Since we train ReverseNet (Oracle) from scratch, VQ weights are set to 0,
-  # and oracle_weight is forced to 1.0.
-  oracle_warmup_epochs: 0
-  oracle_rampup_epochs: 1
-  oracle_max_weight: 1.0
-  recon_weight: 0.0
-  vq_weight: 0.0
-  oracle_bidirectional: false # Set to true to compute loss for both strands
+  lr: 1.0e-3
+  weight_decay: 1.0e-2
+  early_stop: 15
+  log_dir: "train_logs"
 
-  # --- NOWY SCHEDULER (Cosine Annealing z Warmupem) ---
   scheduler:
     apply: true
     type: "cosine"
-    eta_min: 1.0e-6                # Minimum learning rate at end of training
-    warmup_fraction: 0.1           # 10% epok (czyli pierwsze 10) to liniowy wzrost LR i WD
-    weight_decay_scheduler: true   # Aktywacja harmonogramu dla Weight Decay
-    weight_decay_min: 1.0e-6       # Minimum weight decay at end of training
+    eta_min: 1.0e-6
+    warmup_fraction: 0.1
+    weight_decay_scheduler: true
+    weight_decay_min: 1.0e-6
 
-# --- DANE ---
 data:
   dataset_path: "../../data/deepSTARR"
   batch_size: 128
@@ -63,7 +43,7 @@ data:
   target_noise:
     apply: false
 
-# --- LOGOWANIE COMET.ML (Opcjonalne) ---
+# Loffing for COMET
 comet:
   api_key: ""
   project_name: "kamb"

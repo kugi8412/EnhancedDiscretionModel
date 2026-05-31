@@ -1,6 +1,5 @@
 # ============================================================
 # Cross Sparse Autoencoder — Unified Configuration
-# ============================================================
 # Drives cross_sae.py in YAML-config mode (recommended).
 # Can also be used as --data_config for CLI mode.
 #
@@ -17,7 +16,6 @@
 experiment_name: "CrossSAE_Comparison"
 seed: 42
 
-# ---- Models to compare (YAML mode) ----
 models:
   - name: DeepSTARR
     config: config/DeepSTARR.yaml
@@ -27,10 +25,8 @@ models:
     config: config/LegNetPlus.yaml
     weights: results/models/LegNet/best_model.pth
 
-# ---- Shared data loader (used in both modes) ----
 data_config: config/DeepSTARR.yaml
 
-# Also usable as a direct data_config (CLI fallback):
 model:
   name: "DeepSTARR"
   kwargs:
@@ -44,7 +40,6 @@ data:
   target_noise:
     apply: false
 
-# ---- SAE hyper-parameters ----
 sae:
   hidden_dim: 512
   l1_coeff: 1.0e-3
@@ -52,5 +47,5 @@ sae:
   lr: 1.0e-3
   batch_size: 256
 
-# ---- Output ----
+# Output
 output_dir: results/cross_sae

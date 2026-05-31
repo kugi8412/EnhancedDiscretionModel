@@ -6,11 +6,10 @@ experiment_name: "LegNetV2_Oracle_Clean"
 seed: 7898
 
 comet:
-  api_key: ""                 # Set your Comet ML API key here
+  api_key: ""
   project_name: "kamb"
   workspace: ""
 
-# --- Model Architecture ---
 model:
   name: "LegNetV2"
   kwargs:
@@ -22,7 +21,7 @@ model:
     pool_sizes: [1, 2, 1, 2, 1, 2, 1]
     resize_factor: 4
 
-# --- Data (clean, no augmentation) ---
+# Data - No augmentation
 data:
   dataset_path: "../../data/deepSTARR"
   batch_size: 128
@@ -30,16 +29,15 @@ data:
   target_noise:
     apply: false
 
-# --- Training Parameters ---
+# Params training
 training:
   epochs: 100
   batch_size: 128
   lr: 5.0e-4
-  weight_decay: 2.0e-3       # Stronger regularisation without augmentation
+  weight_decay: 2.0e-3
   early_stop: 8
   log_dir: "train_logs/legnet_oracle"
 
-  # No VQ-VAE components (pure oracle training)
   oracle_warmup_epochs: 0
   oracle_rampup_epochs: 1
   oracle_max_weight: 1.0
