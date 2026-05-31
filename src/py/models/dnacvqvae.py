@@ -553,3 +553,330 @@ class HydraDNA_cVQVAE(nn.Module):
         rc_g  = F.gumbel_softmax(logits[:, 4:], tau=tau, hard=True, dim=1)
         return logits, (fwd_g, rc_g), vq_loss
 
+
+# ---------------------------------------------------------------------------
+# Advanced asymmetric cVQVAE with fully configurable encoder/decoder
+# ---------------------------------------------------------------------------
+
+def _build_asym_encoder(in_ch, stem_ch, enc_channels, gru_dim, vq_dim,
+                        depth, kernel_size=5, use_gru=True):
+    """Build asymmetric encoder with per-stage channel configuration.
+
+    Parameters
+    ----------
+    in_ch : int
+        Input channels (4 for DNA).
+    stem_ch : int
+        Initial stem output channels.
+    enc_channels : list[int] or None
+        Per-stage channel widths. If None, uses stem_ch for all stages.
+    gru_dim : int
+        GRU hidden size.
+    vq_dim : int
+        VQ embedding dimension.
+    depth : int
+        Number of downsampling stages.
+    kernel_size : int
+        EffBlock kernel size.
+    use_gru : bool
+        Whether to use bidirectional GRU before VQ projection.
+    """
+    cnn_stem = nn.Sequential(
+        nn.Conv1d(in_ch, stem_ch, kernel_size=7, padding=3, bias=False),
+        nn.BatchNorm1d(stem_ch), nn.SiLU(),
+    )
+
+    if enc_channels is None:
+        enc_channels = [stem_ch] * depth
+    assert len(enc_channels) == depth
+
+    blocks = []
+    ch_in = stem_ch
+    for i in range(depth):
+        ch_out = enc_channels[i]
+        if ch_in != ch_out:
+            blocks.append(nn.Conv1d(ch_in, ch_out, 1, bias=False))
+        blocks += [EffBlock(ch_out, kernel_size=kernel_size), nn.MaxPool1d(2)]
+        ch_in = ch_out
+    cnn_blocks = nn.Sequential(*blocks)
+
+    last_ch = enc_channels[-1]
+    if use_gru:
+        encoder_gru = nn.GRU(last_ch, gru_dim, batch_first=True, bidirectional=True)
+        pre_vq_conv = nn.Conv1d(gru_dim * 2, vq_dim, kernel_size=1)
+    else:
+        encoder_gru = None
+        pre_vq_conv = nn.Conv1d(last_ch, vq_dim, kernel_size=1)
+
+    return cnn_stem, cnn_blocks, encoder_gru, pre_vq_conv
+
+
+def _build_asym_decoder(vq_dim, dec_channels, gru_dim, out_ch, depth,
+                        kernel_size=5, use_gru=True):
+    """Build asymmetric decoder with per-stage channel configuration.
+
+    Parameters
+    ----------
+    vq_dim : int
+        Input dimension from VQ layer.
+    dec_channels : list[int] or None
+        Per-stage channel widths. If None, uses gru_dim*2 for all.
+    gru_dim : int
+        GRU hidden size.
+    out_ch : int
+        Output channels (8 = fwd+rc logits).
+    depth : int
+        Number of upsampling stages.
+    kernel_size : int
+        EffBlock kernel size.
+    use_gru : bool
+        Whether to use bidirectional GRU in the decoder.
+    """
+    if dec_channels is None:
+        dec_channels = [gru_dim * 2] * depth
+    assert len(dec_channels) == depth
+
+    if use_gru:
+        cond_proj = nn.Conv1d(vq_dim, gru_dim * 2, kernel_size=1)
+        decoder_gru = nn.GRU(gru_dim * 2, gru_dim, batch_first=True, bidirectional=True)
+        first_ch = gru_dim * 2
+    else:
+        cond_proj = nn.Conv1d(vq_dim, dec_channels[0], kernel_size=1)
+        decoder_gru = None
+        first_ch = dec_channels[0]
+
+    layers = []
+    ch_in = first_ch
+    for i in range(depth):
+        ch_out = dec_channels[i]
+        layers += [
+            nn.ConvTranspose1d(ch_in, ch_out, kernel_size=4, stride=2, padding=1),
+            EffBlock(ch_out, kernel_size=kernel_size),
+        ]
+        ch_in = ch_out
+    dec_blocks = nn.Sequential(*layers)
+    dec_out = nn.Conv1d(dec_channels[-1], out_ch, kernel_size=5, padding=2)
+
+    return cond_proj, decoder_gru, dec_blocks, dec_out
+
+
+@register_model("cVQVAE_Asymmetric")
+class cVQVAE_Asymmetric(nn.Module):
+    """Fully configurable asymmetric cVQ-VAE for DNA sequence modelling.
+
+    Extends cVQVAE_MultiTask with independent encoder/decoder architecture
+    specifications via YAML config. Each stage can have different channel
+    widths, and GRU can be enabled/disabled independently for
+    encoder and decoder.
+
+    Example YAML (heavy encoder, light decoder):
+    
+    .. code-block:: yaml
+    
+        model:
+          name: "cVQVAE_Asymmetric"
+          kwargs:
+            encoder:
+              depth: 4
+              channels: [192, 256, 256, 384]  # wider as we go deeper
+              kernel_size: 5
+              use_gru: true
+            decoder:
+              depth: 2
+              channels: [192, 128]            # lighter
+              kernel_size: 5
+              use_gru: true
+            stem_ch: 192
+            gru_dim: 192
+            vq_dim: 128
+            num_embeddings: 4096
+            commitment_cost: 0.25
+            classifier_dim: 256
+            film_hidden: 128
+
+    Parameters
+    ----------
+    encoder : dict
+        Encoder config with keys: depth, channels (list), kernel_size, use_gru.
+    decoder : dict
+        Decoder config with keys: depth, channels (list), kernel_size, use_gru.
+    stem_ch : int
+        Initial convolution output channels.
+    gru_dim : int
+        GRU hidden dimension (bidirectional output = 2*gru_dim).
+    vq_dim : int
+        Vector quantizer embedding dimension.
+    num_embeddings : int
+        Codebook size.
+    commitment_cost : float
+        VQ commitment loss weight.
+    classifier_dim : int
+        Expression prediction head hidden width.
+    dropout_rate : float
+        Dropout in prediction heads.
+    film_hidden : int
+        FiLM generator MLP hidden width.
+    uncond_dropout_rate : float
+        Classifier-free guidance dropout rate.
+    """
+
+    def __init__(
+        self,
+        encoder: dict = None,
+        decoder: dict = None,
+        in_ch: int = 4,
+        stem_ch: int = 192,
+        gru_dim: int = 192,
+        vq_dim: int = 128,
+        num_embeddings: int = 4096,
+        commitment_cost: float = 0.25,
+        classifier_dim: int = 256,
+        dropout_rate: float = 0.2,
+        film_hidden: int = 128,
+        uncond_dropout_rate: float = 0.15,
+        **kwargs,
+    ):
+        super().__init__()
+
+        # Encoder config
+        enc_cfg = encoder or {}
+        enc_depth = enc_cfg.get('depth', 3)
+        enc_channels = enc_cfg.get('channels', None)
+        enc_kernel = enc_cfg.get('kernel_size', 5)
+        enc_gru = enc_cfg.get('use_gru', True)
+
+        # Decoder config
+        dec_cfg = decoder or {}
+        dec_depth = dec_cfg.get('depth', enc_depth)
+        dec_channels = dec_cfg.get('channels', None)
+        dec_kernel = dec_cfg.get('kernel_size', 5)
+        dec_gru = dec_cfg.get('use_gru', True)
+
+        self.vq_dim = vq_dim
+        self.uncond_dropout_rate = uncond_dropout_rate
+        self.enc_gru_enabled = enc_gru
+        self.dec_gru_enabled = dec_gru
+
+        # Build encoder
+        (self.cnn_stem,
+         self.cnn_blocks,
+         self.encoder_gru,
+         self.pre_vq_conv) = _build_asym_encoder(
+            in_ch, stem_ch, enc_channels, gru_dim, vq_dim,
+            enc_depth, enc_kernel, enc_gru
+        )
+
+        # Quantizer
+        self.vq_layer = EMAVectorQuantizer(
+            num_embeddings, vq_dim, commitment_cost=commitment_cost
+        )
+
+        # Multitask regression heads
+        self.head_dev = nn.Sequential(
+            nn.Linear(vq_dim, classifier_dim), nn.BatchNorm1d(classifier_dim),
+            nn.SiLU(), nn.Dropout(dropout_rate),
+            nn.Linear(classifier_dim, classifier_dim // 2), nn.SiLU(),
+            nn.Dropout(dropout_rate),
+            nn.Linear(classifier_dim // 2, 1),
+        )
+        self.head_hk = nn.Sequential(
+            nn.Linear(vq_dim, classifier_dim), nn.BatchNorm1d(classifier_dim),
+            nn.SiLU(), nn.Dropout(dropout_rate),
+            nn.Linear(classifier_dim, classifier_dim // 2), nn.SiLU(),
+            nn.Dropout(dropout_rate),
+            nn.Linear(classifier_dim // 2, 1),
+        )
+
+        # FiLM conditioning
+        self.film = FiLMGenerator(cond_dim=2, out_dim=vq_dim, hidden_dim=film_hidden)
+
+        # Build decoder
+        (self.dec_cond_proj,
+         self.decoder_gru,
+         self.decoder_blocks,
+         self.decoder_out) = _build_asym_decoder(
+            vq_dim, dec_channels, gru_dim, in_ch * 2,
+            dec_depth, dec_kernel, dec_gru
+        )
+
+    def _encode(self, x):
+        h = self.cnn_stem(x)
+        h = self.cnn_blocks(h)
+        if self.encoder_gru is not None:
+            h = h.permute(0, 2, 1)
+            h, _ = self.encoder_gru(h)
+            h = h.permute(0, 2, 1)
+        return self.pre_vq_conv(h)
+
+    def _decode(self, quantized, gamma, beta, target_len):
+        cq = (1.0 + gamma) * quantized + beta
+        d = self.dec_cond_proj(cq)
+        if self.decoder_gru is not None:
+            d = d.permute(0, 2, 1)
+            d, _ = self.decoder_gru(d)
+            d = d.permute(0, 2, 1)
+        d = self.decoder_blocks(d)
+        logits = self.decoder_out(d)
+        if logits.size(2) != target_len:
+            logits = F.interpolate(logits, size=target_len, mode="linear", align_corners=False)
+        return logits[:, :4], logits[:, 4:]
+
+    def forward(self, x, y_dev=None, y_hk=None, tau=1.0):
+        L = x.size(2)
+        B = x.size(0)
+
+        z = self._encode(x)
+        quantized, vq_loss, _ = self.vq_layer(z)
+
+        q_pooled = F.adaptive_avg_pool1d(quantized, 1).squeeze(-1)
+        pred_dev = self.head_dev(q_pooled)
+        pred_hk = self.head_hk(q_pooled)
+
+        if y_dev is not None and y_hk is not None:
+            cond = torch.stack([y_dev.float(), y_hk.float()], dim=1)
+            if self.training:
+                drop = (torch.rand(B, 1, device=x.device) < self.uncond_dropout_rate)
+                cond = cond * (~drop).float()
+        else:
+            cond = torch.zeros(B, 2, device=x.device)
+
+        gamma, beta = self.film(cond)
+        fwd_logits, rc_logits = self._decode(quantized, gamma, beta, L)
+
+        fwd_g = F.gumbel_softmax(fwd_logits, tau=tau, hard=True, dim=1)
+        rc_g = F.gumbel_softmax(rc_logits, tau=tau, hard=True, dim=1)
+
+        return torch.cat([fwd_logits, rc_logits], dim=1), (fwd_g, rc_g), vq_loss, pred_dev, pred_hk
+
+    @torch.no_grad()
+    def encode_to_latent(self, x):
+        self.eval()
+        z = self._encode(x)
+        quantized, _, indices = self.vq_layer(z)
+        return quantized, indices
+
+    @torch.no_grad()
+    def predict(self, x):
+        self.eval()
+        z = self._encode(x)
+        quantized, _, _ = self.vq_layer(z)
+        q_pooled = F.adaptive_avg_pool1d(quantized, 1).squeeze(-1)
+        return self.head_dev(q_pooled), self.head_hk(q_pooled)
+
+    @torch.no_grad()
+    def rewrite(self, x, target_dev, target_hk, tau=0.1):
+        self.eval()
+        L = x.size(2)
+        B = x.size(0)
+        z = self._encode(x)
+        quantized, _, _ = self.vq_layer(z)
+        if isinstance(target_dev, (int, float)):
+            target_dev = torch.full((B,), float(target_dev), device=x.device)
+        if isinstance(target_hk, (int, float)):
+            target_hk = torch.full((B,), float(target_hk), device=x.device)
+        cond = torch.stack([target_dev.float(), target_hk.float()], dim=1)
+        gamma, beta = self.film(cond)
+        fwd_logits, _ = self._decode(quantized, gamma, beta, L)
+        return F.gumbel_softmax(fwd_logits, tau=tau, hard=True, dim=1)
+
+

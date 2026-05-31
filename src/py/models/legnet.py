@@ -166,6 +166,7 @@ class LegNetOriginal(nn.Module):
         self,
         seqsize=249,
         use_single_channel=False,
+        in_channels=None,
         block_sizes=(256, 256, 128, 128, 64, 64, 32, 32),
         ks=5,
         resize_factor=4,
@@ -185,7 +186,10 @@ class LegNetOriginal(nn.Module):
         self.final_ch = final_ch
         self.bn_momentum = bn_momentum
 
-        in_ch = 6 if self.use_single_channel else 5
+        if in_channels is not None:
+            in_ch = in_channels
+        else:
+            in_ch = 6 if self.use_single_channel else 5
         seqextblocks = OrderedDict()
 
         # Stem block

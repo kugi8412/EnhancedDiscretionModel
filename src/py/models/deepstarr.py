@@ -103,6 +103,11 @@ class DeepSTARR_Siamese(DeepSTARR):
 
 @register_model("DeepSTARR_2D_Fusion")
 class DeepSTARR_2D_Fusion(DeepSTARR):
+    @staticmethod
+    def get_reverse_complement_tensor(x):
+        """Reverse-complement: flip channels (A<->T, C<->G) and reverse positions."""
+        return torch.flip(x, dims=[1, 2])
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         

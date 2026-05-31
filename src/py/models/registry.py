@@ -5,6 +5,8 @@ Provides a decorator-based registration system so that any model class
 can be instantiated by name at runtime.
 """
 
+import torch.nn as nn
+
 MODELS = {}
 
 
@@ -140,5 +142,52 @@ def build_model(config: dict):
               f"(type='{attn_cfg.get('type', 'channel')}', "
               f"seq_len={attn_cfg.get('seq_len')})")
 
+    # ------------------------------------------------------------------ #
+    # Optional: Single-output ablation mode                                #
+    # ------------------------------------------------------------------ #
+    output_head = model_cfg.get('output_head', 'both')
+    if output_head != 'both':
+        model = SingleOutputWrapper(model, output_head)
+        print(f"[model] Single-output mode: only '{output_head}' head active")
+
     return model
+
+
+class SingleOutputWrapper(nn.Module):
+    """Wraps a dual-output model to produce only one output.
+
+    Used for ablation studies comparing multitask vs single-task learning.
+    The model still computes both outputs internally, but only one is
+    returned (and only one gets gradient signal during training).
+
+    Parameters
+    ----------
+    model : nn.Module
+        A model whose forward() returns (out_dev, out_hk).
+    output : str
+        Which output to keep: 'dev' (index 0) or 'hk' (index 1).
+    """
+
+    def __init__(self, model, output='dev'):
+        super().__init__()
+        self.model = model
+        if output not in ('dev', 'hk'):
+            raise ValueError(f"output_head must be 'dev', 'hk', or 'both', got: {output}")
+        self.output_idx = 0 if output == 'dev' else 1
+        self.output_name = output
+
+    def forward(self, x):
+        outputs = self.model(x)
+        return outputs[self.output_idx]
+
+    def get_features(self, x):
+        if hasattr(self.model, 'get_features'):
+            return self.model.get_features(x)
+        raise AttributeError("Wrapped model has no get_features method")
+
+    def __getattr__(self, name):
+        try:
+            return super().__getattr__(name)
+        except AttributeError:
+            return getattr(self.model, name)
 

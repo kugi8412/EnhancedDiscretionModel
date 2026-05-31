@@ -11,6 +11,8 @@ from . import reversnet
 from . import senet
 from . import legnet
 from . import convnext
+from . import dilated_convnext
+from . import deep_epi
 from . import emavqvae
 from . import dnacvqvae
 from . import pixelcnn
