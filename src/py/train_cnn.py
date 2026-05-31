@@ -7,7 +7,10 @@ Supports: DeepSTARR, LegNet, LegNetV2, ConvNeXt_DNA, SEResNet, BassetNetwork,
 Usage:
     python train_cnn.py -c ../../config/LegNetPlus.yaml
 """
-import comet_ml
+try:
+    import comet_ml
+except ImportError:
+    comet_ml = None
 
 import os
 import csv
@@ -119,7 +122,7 @@ def update_weight_decay(optimizer, epoch, warmup_epochs, epochs, wd_min, wd_max,
 
 def setup_comet(config):
     comet_cfg = config.get('comet', {})
-    if not comet_cfg.get('api_key'):
+    if comet_ml is None or not comet_cfg.get('api_key'):
         return None
     experiment = comet_ml.start(
         api_key=comet_cfg['api_key'],
@@ -151,6 +154,12 @@ def train_cnn(config):
 
     print(f"[INFO] Building model: {config['model']['name']}")
     model = build_model(config).to(device)
+
+    # Detect single-output ablation mode
+    output_head = config['model'].get('output_head', 'both')
+    single_output = (output_head != 'both')
+    if single_output:
+        print(f"[INFO] Single-output ablation mode: '{output_head}' only")
 
     train_loader = prepare_input(set_name='Train', config=config)
     val_loader = prepare_input(set_name='Val', config=config)
@@ -199,23 +208,42 @@ def train_cnn(config):
             Y_hk_batch = Y_hk_batch.to(device)
             optimizer.zero_grad()
 
-            pred_dev, pred_hk = model(X_batch)
-            loss = criterion(pred_dev.squeeze(), Y_dev_batch) + \
-                   criterion(pred_hk.squeeze(), Y_hk_batch)
+            if single_output:
+                pred = model(X_batch)
+                target = Y_dev_batch if output_head == 'dev' else Y_hk_batch
+                loss = criterion(pred.squeeze(), target)
+                train_loss += loss.item() * X_batch.size(0)
+                if output_head == 'dev':
+                    train_preds_dev.extend(pred.detach().cpu().numpy().flatten())
+                    train_targs_dev.extend(Y_dev_batch.cpu().numpy().flatten())
+                else:
+                    train_preds_hk.extend(pred.detach().cpu().numpy().flatten())
+                    train_targs_hk.extend(Y_hk_batch.cpu().numpy().flatten())
+            else:
+                pred_dev, pred_hk = model(X_batch)
+                loss = criterion(pred_dev.squeeze(), Y_dev_batch) + \
+                       criterion(pred_hk.squeeze(), Y_hk_batch)
+                train_loss += loss.item() * X_batch.size(0)
+                train_preds_dev.extend(pred_dev.detach().cpu().numpy().flatten())
+                train_preds_hk.extend(pred_hk.detach().cpu().numpy().flatten())
+                train_targs_dev.extend(Y_dev_batch.cpu().numpy().flatten())
+                train_targs_hk.extend(Y_hk_batch.cpu().numpy().flatten())
 
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
 
-            train_loss += loss.item() * X_batch.size(0)
-            train_preds_dev.extend(pred_dev.detach().cpu().numpy().flatten())
-            train_preds_hk.extend(pred_hk.detach().cpu().numpy().flatten())
-            train_targs_dev.extend(Y_dev_batch.cpu().numpy().flatten())
-            train_targs_hk.extend(Y_hk_batch.cpu().numpy().flatten())
-
         avg_train_loss = train_loss / len(train_loader.dataset)
-        tr_mse_dev, tr_pcc_dev, tr_scc_dev = calculate_metrics(train_targs_dev, train_preds_dev)
-        tr_mse_hk, tr_pcc_hk, tr_scc_hk = calculate_metrics(train_targs_hk, train_preds_hk)
+        if single_output:
+            if output_head == 'dev':
+                tr_mse_dev, tr_pcc_dev, tr_scc_dev = calculate_metrics(train_targs_dev, train_preds_dev)
+                tr_mse_hk, tr_pcc_hk, tr_scc_hk = 0.0, 0.0, 0.0
+            else:
+                tr_mse_dev, tr_pcc_dev, tr_scc_dev = 0.0, 0.0, 0.0
+                tr_mse_hk, tr_pcc_hk, tr_scc_hk = calculate_metrics(train_targs_hk, train_preds_hk)
+        else:
+            tr_mse_dev, tr_pcc_dev, tr_scc_dev = calculate_metrics(train_targs_dev, train_preds_dev)
+            tr_mse_hk, tr_pcc_hk, tr_scc_hk = calculate_metrics(train_targs_hk, train_preds_hk)
 
         # --- VALIDATION ---
         model.eval()
@@ -229,19 +257,38 @@ def train_cnn(config):
                 Y_dev_batch = Y_dev_batch.to(device)
                 Y_hk_batch = Y_hk_batch.to(device)
 
-                pred_dev, pred_hk = model(X_batch)
-                loss = criterion(pred_dev.squeeze(), Y_dev_batch) + \
-                       criterion(pred_hk.squeeze(), Y_hk_batch)
-
-                val_loss += loss.item() * X_batch.size(0)
-                val_preds_dev.extend(pred_dev.cpu().numpy().flatten())
-                val_preds_hk.extend(pred_hk.cpu().numpy().flatten())
-                val_targs_dev.extend(Y_dev_batch.cpu().numpy().flatten())
-                val_targs_hk.extend(Y_hk_batch.cpu().numpy().flatten())
+                if single_output:
+                    pred = model(X_batch)
+                    target = Y_dev_batch if output_head == 'dev' else Y_hk_batch
+                    loss = criterion(pred.squeeze(), target)
+                    val_loss += loss.item() * X_batch.size(0)
+                    if output_head == 'dev':
+                        val_preds_dev.extend(pred.cpu().numpy().flatten())
+                        val_targs_dev.extend(Y_dev_batch.cpu().numpy().flatten())
+                    else:
+                        val_preds_hk.extend(pred.cpu().numpy().flatten())
+                        val_targs_hk.extend(Y_hk_batch.cpu().numpy().flatten())
+                else:
+                    pred_dev, pred_hk = model(X_batch)
+                    loss = criterion(pred_dev.squeeze(), Y_dev_batch) + \
+                           criterion(pred_hk.squeeze(), Y_hk_batch)
+                    val_loss += loss.item() * X_batch.size(0)
+                    val_preds_dev.extend(pred_dev.cpu().numpy().flatten())
+                    val_preds_hk.extend(pred_hk.cpu().numpy().flatten())
+                    val_targs_dev.extend(Y_dev_batch.cpu().numpy().flatten())
+                    val_targs_hk.extend(Y_hk_batch.cpu().numpy().flatten())
 
         avg_val_loss = val_loss / len(val_loader.dataset)
-        val_mse_dev, val_pcc_dev, val_scc_dev = calculate_metrics(val_targs_dev, val_preds_dev)
-        val_mse_hk, val_pcc_hk, val_scc_hk = calculate_metrics(val_targs_hk, val_preds_hk)
+        if single_output:
+            if output_head == 'dev':
+                val_mse_dev, val_pcc_dev, val_scc_dev = calculate_metrics(val_targs_dev, val_preds_dev)
+                val_mse_hk, val_pcc_hk, val_scc_hk = 0.0, 0.0, 0.0
+            else:
+                val_mse_dev, val_pcc_dev, val_scc_dev = 0.0, 0.0, 0.0
+                val_mse_hk, val_pcc_hk, val_scc_hk = calculate_metrics(val_targs_hk, val_preds_hk)
+        else:
+            val_mse_dev, val_pcc_dev, val_scc_dev = calculate_metrics(val_targs_dev, val_preds_dev)
+            val_mse_hk, val_pcc_hk, val_scc_hk = calculate_metrics(val_targs_hk, val_preds_hk)
 
         epoch_time = time.time() - epoch_start_time
         if scheduler:
@@ -271,10 +318,17 @@ def train_cnn(config):
         print(f"Epoch {epoch+1:03d}/{epochs} "
               f"[LR: {current_lr:.2e} | WD: {current_wd:.2e}] | "
               f"Loss: Tr={avg_train_loss:.4f} Val={avg_val_loss:.4f} | "
-              f"Dev PCC: Tr={tr_pcc_dev:.3f} Val={val_pcc_dev:.3f}")
+              f"Dev PCC: Tr={tr_pcc_dev:.3f} Val={val_pcc_dev:.3f}"
+              + (f" | Hk PCC: Val={val_pcc_hk:.3f}" if single_output and output_head == 'hk' else ""))
 
-        if val_pcc_dev > best_val_pcc:
-            best_val_pcc = val_pcc_dev
+        # Early stopping metric: use the active head's PCC
+        if single_output and output_head == 'hk':
+            val_pcc_metric = val_pcc_hk
+        else:
+            val_pcc_metric = val_pcc_dev
+
+        if val_pcc_metric > best_val_pcc:
+            best_val_pcc = val_pcc_metric
             epochs_no_improve = 0
             model_path = os.path.join(
                 log_dir, f"{config['experiment_name']}_seed{seed}.pth")

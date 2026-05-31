@@ -14,28 +14,64 @@ from utils import load_config, prepare_input
 from models.registry import build_model
 
 
+def encode_pre_vq(model, x):
+    """Encode input to pre-VQ latent (works with any cVQVAE variant)."""
+    if hasattr(model, 'encode_strand'):
+        return model.encode_strand(x)
+    elif hasattr(model, '_encode'):
+        return model._encode(x)
+    else:
+        raise ValueError("Model has no recognized encoding method (encode_strand or _encode).")
+
+
 def decode_with_film(model, z_q, y_dev, y_hk, seq_len=249):
     """
-    Manually pass the latent tensor through FiLM conditioning and decoder layers.
+    Decode a quantized latent tensor through any cVQVAE variant with FiLM conditioning.
+    Supports cVQVAE_MultiTask, cVQVAE_Asymmetric, and HydraDNA_cVQVAE.
     """
-    c = torch.stack([y_dev, y_hk], dim=1)
-    film_params = model.film_generator(c)
-    gamma = film_params[:, :z_q.size(1)].unsqueeze(2)
-    beta = film_params[:, z_q.size(1):].unsqueeze(2)
-    
-    z_cond = (1.0 + gamma) * z_q + beta
-    
-    d = model.decoder_cond_proj(z_cond)
-    d = d.permute(0, 2, 1)
-    d, _ = model.decoder_gru(d)
-    d = d.permute(0, 2, 1)
-    d = model.decoder_blocks(d)
-    x_logits = model.decoder_out(d)
-    
-    if x_logits.size(2) != seq_len:
-        x_logits = F.interpolate(x_logits, size=seq_len, mode='linear', align_corners=False)
-        
-    return x_logits[:, 0:4, :]  # Return FWD strand only (A,C,G,T)
+    B = z_q.size(0)
+    cond = torch.stack([y_dev, y_hk], dim=1)
+
+    # --- cVQVAE_Asymmetric / cVQVAE_MultiTask (has .film as FiLMGenerator) ---
+    if hasattr(model, 'film') and hasattr(model.film, 'net'):
+        gamma, beta = model.film(cond)
+        # Use the model's own _decode which handles GRU presence/absence
+        if hasattr(model, '_decode'):
+            fwd_logits, _ = model._decode(z_q, gamma, beta, seq_len)
+            return fwd_logits
+        # Fallback: manual path for cVQVAE_MultiTask
+        cq = (1.0 + gamma) * z_q + beta
+        d = model.decoder_cond_proj(cq) if hasattr(model, 'decoder_cond_proj') else model.dec_cond_proj(cq)
+        if hasattr(model, 'decoder_gru') and model.decoder_gru is not None:
+            d = d.permute(0, 2, 1)
+            d, _ = model.decoder_gru(d)
+            d = d.permute(0, 2, 1)
+        d = model.decoder_blocks(d)
+        x_logits = model.decoder_out(d)
+        if x_logits.size(2) != seq_len:
+            x_logits = F.interpolate(x_logits, size=seq_len, mode='linear', align_corners=False)
+        return x_logits[:, 0:4, :]
+
+    # --- HydraDNA_cVQVAE (has .film_generator as nn.Sequential) ---
+    elif hasattr(model, 'film_generator'):
+        film_params = model.film_generator(cond)
+        vq_dim = z_q.size(1)
+        gamma = film_params[:, :vq_dim].unsqueeze(2)
+        beta = film_params[:, vq_dim:].unsqueeze(2)
+
+        z_cond = (1.0 + gamma) * z_q + beta
+        d = model.decoder_cond_proj(z_cond)
+        d = d.permute(0, 2, 1)
+        d, _ = model.decoder_gru(d)
+        d = d.permute(0, 2, 1)
+        d = model.decoder_blocks(d)
+        x_logits = model.decoder_out(d)
+        if x_logits.size(2) != seq_len:
+            x_logits = F.interpolate(x_logits, size=seq_len, mode='linear', align_corners=False)
+        return x_logits[:, 0:4, :]
+
+    else:
+        raise ValueError("Model does not have a recognized FiLM conditioning interface.")
 
 
 # ==========================================
@@ -118,7 +154,7 @@ def main(args):
     oracle.eval() 
     
     dummy_x = torch.zeros(1, 4, config['data'].get('seq_len', 249)).to(device)
-    z_dummy = vqvae.encode_strand(dummy_x)
+    z_dummy = encode_pre_vq(vqvae, dummy_x)
     latent_len = z_dummy.shape[2]
     num_embeddings = vqvae.vq_layer.num_embeddings
     
@@ -163,7 +199,7 @@ def main(args):
             vqvae.train()
             opt_vq.zero_grad()
             
-            z_e = vqvae.encode_strand(X_batch)
+            z_e = encode_pre_vq(vqvae, X_batch)
             z_q, vq_loss, current_indices = vqvae.vq_layer(z_e)
             
             x_recon_logits = decode_with_film(vqvae, z_q, Y_dev, Y_hk, seq_len=seq_len)

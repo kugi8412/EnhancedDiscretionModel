@@ -42,18 +42,28 @@ from models.registry import build_model
 # 1. SPARSE AUTOENCODER
 # ==========================================
 
+
+def resolve_topk(k, hidden_dim):
+    """Resolve TopK value: if 0 < k < 1, treat as fraction of hidden_dim."""
+    if isinstance(k, float) and 0.0 < k < 1.0:
+        return max(1, int(k * hidden_dim))
+    return int(k)
+
+
 class SparseAutoencoder(nn.Module):
     """
-    Sparse Autoencoder with L1 penalty on the hidden representation.
-    Learns an overcomplete dictionary of features from model activations.
+    TopK Sparse Autoencoder — hard sparsity via top-k mask.
+    Keeps exactly `k` largest activations per sample, zeros the rest.
+    No L1 tuning required; sparsity = 1 - k/hidden_dim.
     """
-    def __init__(self, input_dim, hidden_dim, l1_coeff=1e-3):
+    def __init__(self, input_dim, hidden_dim, k=32, l1_coeff=0.0):
         super().__init__()
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
-        self.l1_coeff = l1_coeff
+        self.k = resolve_topk(k, hidden_dim)
 
         self.encoder = nn.Linear(input_dim, hidden_dim, bias=True)
+        self.encoder_bn = nn.BatchNorm1d(hidden_dim)
         self.decoder = nn.Linear(hidden_dim, input_dim, bias=True)
 
         # Tied init
@@ -61,7 +71,11 @@ class SparseAutoencoder(nn.Module):
             self.decoder.weight.copy_(self.encoder.weight.t())
 
     def encode(self, x):
-        return F.relu(self.encoder(x))
+        pre = F.relu(self.encoder_bn(self.encoder(x)))
+        topk_vals, topk_idx = pre.topk(self.k, dim=1)
+        out = torch.zeros_like(pre)
+        out.scatter_(1, topk_idx, topk_vals)
+        return out
 
     def forward(self, x):
         h = self.encode(x)
@@ -71,8 +85,8 @@ class SparseAutoencoder(nn.Module):
     def loss(self, x):
         x_recon, h = self.forward(x)
         recon_loss = F.mse_loss(x_recon, x)
-        sparsity_loss = self.l1_coeff * h.abs().mean()
-        return recon_loss + sparsity_loss, recon_loss, sparsity_loss
+        # No L1 needed — sparsity is structural via TopK
+        return recon_loss, recon_loss, torch.tensor(0.0, device=x.device)
 
 
 # ==========================================
@@ -331,11 +345,11 @@ def compute_cka_matrix(features_a, features_b, names_a, names_b,
 # 4. TRAIN SPARSE AUTOENCODER
 # ==========================================
 
-def train_sae(features, hidden_dim=512, l1_coeff=1e-3, epochs=200,
+def train_sae(features, hidden_dim=512, l1_coeff=1e-3, k=32, epochs=200,
               lr=1e-3, batch_size=256, device='cpu'):
-    """Train a Sparse Autoencoder on extracted features."""
+    """Train a TopK Sparse Autoencoder on extracted features."""
     input_dim = features.shape[1]
-    sae = SparseAutoencoder(input_dim, hidden_dim, l1_coeff).to(device)
+    sae = SparseAutoencoder(input_dim, hidden_dim, k=k).to(device)
     optimizer = optim.Adam(sae.parameters(), lr=lr)
 
     dataset = torch.utils.data.TensorDataset(features)
@@ -785,6 +799,8 @@ def main():
     parser.add_argument('--output_dir', type=str, default='results/cross_sae')
     parser.add_argument('--hidden_dim', type=int, default=512)
     parser.add_argument('--l1_coeff', type=float, default=1e-3)
+    parser.add_argument('--topk', type=float, default=32,
+                        help='TopK: integer for absolute count, float <1 for fraction (e.g. 0.1 = 10%%)')
     parser.add_argument('--sae_epochs', type=int, default=200)
     parser.add_argument('--sae_lr', type=float, default=1e-3)
     parser.add_argument('--sae_batch_size', type=int, default=256)
@@ -803,6 +819,7 @@ def main():
         sae_params = cfg.get('sae', {})
         hidden_dim = sae_params.get('hidden_dim', 512)
         l1_coeff = sae_params.get('l1_coeff', 1e-3)
+        topk = sae_params.get('topk', 32)
         sae_epochs = sae_params.get('epochs', 200)
         sae_lr = sae_params.get('lr', 1e-3)
         sae_batch_size = sae_params.get('batch_size', 256)
@@ -817,6 +834,7 @@ def main():
         output_dir = args.output_dir
         hidden_dim = args.hidden_dim
         l1_coeff = args.l1_coeff
+        topk = args.topk
         sae_epochs = args.sae_epochs
         sae_lr = args.sae_lr
         sae_batch_size = args.sae_batch_size
@@ -905,7 +923,7 @@ def main():
         in_dim = features.shape[1]
         print(f"\n[{name}] Training SAE (in={in_dim}, hidden={hidden_dim})...")
         sae, history = train_sae(
-            features, hidden_dim=hidden_dim, l1_coeff=l1_coeff,
+            features, hidden_dim=hidden_dim, k=topk,
             epochs=sae_epochs, lr=sae_lr, batch_size=sae_batch_size,
             device=device,
         )
@@ -1134,7 +1152,7 @@ def main_multilayer():
 
                 sae_results = {}
                 hidden_dim = sae_params.get('hidden_dim', 256)
-                l1_coeff = sae_params.get('l1_coeff', 1e-3)
+                topk = sae_params.get('topk', 32)
                 sae_epochs = sae_params.get('epochs', 100)
                 sae_lr = sae_params.get('lr', 1e-3)
                 sae_bs = sae_params.get('batch_size', 256)
@@ -1151,12 +1169,12 @@ def main_multilayer():
                     fb = feats_b[layer_b].float()
 
                     sae_a, _ = train_sae(
-                        fa, hidden_dim=hidden_dim, l1_coeff=l1_coeff,
+                        fa, hidden_dim=hidden_dim, k=topk,
                         epochs=sae_epochs, lr=sae_lr,
                         batch_size=sae_bs, device=device,
                     )
                     sae_b, _ = train_sae(
-                        fb, hidden_dim=hidden_dim, l1_coeff=l1_coeff,
+                        fb, hidden_dim=hidden_dim, k=topk,
                         epochs=sae_epochs, lr=sae_lr,
                         batch_size=sae_bs, device=device,
                     )

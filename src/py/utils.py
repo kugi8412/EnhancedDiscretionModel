@@ -14,6 +14,10 @@ from datasets import DNADataset
 from models.registry import build_model
 
 
+GLOBAL_NORMALIZE_TARGETS = False 
+GLOBAL_RC_CORRECTION = False
+
+
 def load_config(config_path):
     """Load a YAML configuration file and return it as a dictionary."""
     with open(config_path, 'r') as file:
@@ -62,13 +66,15 @@ def load_fasta_with_strand_correction(file_path: str) -> list:
     list[str]
         Upper-case, plus-strand DNA sequences.
     """
+    global GLOBAL_RC_CORRECTION
+
     trans = str.maketrans('ACGTNacgtn', 'TGCANtgcan')
     sequences = []
     n_corrected = 0
     for record in SeqIO.parse(file_path, 'fasta'):
         seq = str(record.seq).upper()
         # Match '_-_' anywhere in the record id (e.g. chr2L_100_349_-_peak)
-        if '_-_' in record.id:
+        if '_-_' in record.id and GLOBAL_RC_CORRECTION:
             seq = seq.translate(trans)[::-1]
             n_corrected += 1
         sequences.append(seq)
@@ -101,23 +107,11 @@ def load_fasta_sequences(file_path: str) -> list:
 
 
 def prepare_input(set_name, config, activity_cols=('Dev_log2_enrichment', 'Hk_log2_enrichment'), shuffle=None):
-    """Load sequences and activity labels, returning a ready-to-use DataLoader.
-
-    Parameters
-    ----------
-    set_name : str
-        Split identifier: ``'Train'``, ``'Val'``, or ``'Test'``.
-    config : dict
-        Parsed YAML configuration.
-    activity_cols : tuple[str, str]
-        Column names for the two expression targets.
-    shuffle : bool or None
-        Override shuffle behaviour.  ``None`` shuffles training data only.
-
-    Returns
-    -------
-    DataLoader
-    """
+    """Load sequences and activity labels, returning a ready-to-use DataLoader."""
+    
+    # Importujemy obie zmienne globalne
+    global GLOBAL_NORMALIZE_TARGETS, GLOBAL_RC_CORRECTION
+    
     data_cfg = config.get('data', {})
     batch_size = data_cfg.get('batch_size', 128)
     set_dir = data_cfg.get('dataset_path', '../../data/deepSTARR')
@@ -133,11 +127,20 @@ def prepare_input(set_name, config, activity_cols=('Dev_log2_enrichment', 'Hk_lo
     noise_config = data_cfg.get('target_noise', {'apply': False}) if is_train else {'apply': False}
 
     file_seq = f'{set_dir}/Sequences_{set_name}.fa'
-    strand_correct = data_cfg.get('strand_correct', True)
-    if strand_correct:
+    
+    # ==========================================
+    # STEROWANIE KOREKTĄ REVERSE COMPLEMENT (RC)
+    # ==========================================
+    # Respect config key 'strand_correct' (used by gLLMs like DNABert2, Evo2)
+    use_rc = GLOBAL_RC_CORRECTION or data_cfg.get('strand_correct', False)
+    if use_rc:
         sequences = load_fasta_with_strand_correction(file_seq)
+        # UWAGA: Wewnątrz Twojej funkcji load_fasta_with_strand_correction 
+        # prawdopodobnie jest już print informujący o zamianie nici.
     else:
         sequences = load_fasta_sequences(file_seq)
+        print(f'[WARNING] {set_name}: We consider +/- sequences.')
+    # ==========================================
 
     seq_matrix = one_hot_encode_dna(sequences)
     print(f'{set_name} Sequence Matrix Shape: {seq_matrix.shape}')
@@ -149,6 +152,18 @@ def prepare_input(set_name, config, activity_cols=('Dev_log2_enrichment', 'Hk_lo
 
     Y_first = activity_data[activity_cols[0]].values
     Y_second = activity_data[activity_cols[1]].values
+
+    # ==========================================
+    # STEROWANIE NORMALIZACJĄ (Z-SCORE)
+    # ==========================================
+    if GLOBAL_NORMALIZE_TARGETS:
+        if np.std(Y_first) > 0:
+            Y_first = (Y_first - np.mean(Y_first)) / np.std(Y_first)
+        if np.std(Y_second) > 0:
+            Y_second = (Y_second - np.mean(Y_second)) / np.std(Y_second)
+    
+        print(f'[INFO] {set_name}: Z-score normalization.')
+    # ==========================================
 
     X_tensor = torch.tensor(X, dtype=torch.float32)
     Y_first_tensor = torch.tensor(Y_first, dtype=torch.float32)

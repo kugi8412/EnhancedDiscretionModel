@@ -6,7 +6,10 @@ Handles reconstruction loss, VQ commitment loss, oracle guidance, and codebook t
 Usage:
     python train_vq.py -c ../../config/HydraDNA_cVQVAEPlus.yaml
 """
-import comet_ml
+try:
+    import comet_ml
+except ImportError:
+    comet_ml = None
 
 import os
 import csv
@@ -72,12 +75,16 @@ def plot_vq_history(history, log_dir, seed):
 
 def compute_vq_loss(model, X_batch, Y_dev_batch, Y_hk_batch, oracle_model,
                     oracle_weight, recon_weight, vq_weight,
-                    oracle_bidirectional, criterion):
+                    oracle_bidirectional, criterion, latent=None):
     """Unified loss computation for all VQ model types."""
     try:
         outputs = model(X_batch, Y_dev_batch, Y_hk_batch)
     except TypeError:
-        outputs = model(X_batch)
+        # PixelCNN Conditioned takes (x, latent)
+        if latent is not None:
+            outputs = model(X_batch, latent=latent)
+        else:
+            outputs = model(X_batch)
 
     recon_acc = None
     pred_dev, pred_hk = None, None
@@ -213,7 +220,7 @@ def train_vq(config):
     # Comet
     comet_cfg = config.get('comet', {})
     experiment = None
-    if comet_cfg.get('api_key'):
+    if comet_ml is not None and comet_cfg.get('api_key'):
         experiment = comet_ml.start(
             api_key=comet_cfg['api_key'],
             project_name=comet_cfg['project_name'],
@@ -237,6 +244,20 @@ def train_vq(config):
         oracle_model.eval()
         for p in oracle_model.parameters():
             p.requires_grad = False
+
+    # Latent conditioning model (frozen cVQVAE for PixelCNN conditioning)
+    latent_model = None
+    latent_cfg = config.get('latent_model', None)
+    if latent_cfg and latent_cfg.get('config_path'):
+        print(f"[INFO] Loading latent conditioning model: {latent_cfg['config_path']}")
+        latent_config = load_config(latent_cfg['config_path'])
+        latent_model = build_model(latent_config).to(device)
+        latent_model.load_state_dict(
+            torch.load(latent_cfg['weights_path'], map_location=device, weights_only=True))
+        latent_model.eval()
+        for p in latent_model.parameters():
+            p.requires_grad = False
+        print("[INFO] Latent model loaded and frozen — will provide VQ conditioning.")
 
     # Data
     train_loader = prepare_input(set_name='Train', config=config)
@@ -288,10 +309,16 @@ def train_vq(config):
             X, Yd, Yh = X.to(device), Yd.to(device), Yh.to(device)
             optimizer.zero_grad()
 
+            # Extract conditioning latents from frozen cVQVAE if available
+            latent = None
+            if latent_model is not None:
+                with torch.no_grad():
+                    latent, _ = latent_model.encode_to_latent(X)
+
             loss, pd, ph, racc = compute_vq_loss(
                 model, X, Yd, Yh, oracle_model,
                 oracle_weight, recon_weight, vq_weight,
-                oracle_bidirectional, criterion)
+                oracle_bidirectional, criterion, latent=latent)
 
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
@@ -319,10 +346,15 @@ def train_vq(config):
             for X, Yd, Yh in val_loader:
                 X, Yd, Yh = X.to(device), Yd.to(device), Yh.to(device)
 
+                # Extract conditioning latents for validation too
+                latent = None
+                if latent_model is not None:
+                    latent, _ = latent_model.encode_to_latent(X)
+
                 loss, pd, ph, racc = compute_vq_loss(
                     model, X, Yd, Yh, oracle_model,
                     oracle_weight, recon_weight, vq_weight,
-                    oracle_bidirectional, criterion)
+                    oracle_bidirectional, criterion, latent=latent)
 
                 val_loss += loss.item() * X.size(0)
                 if racc is not None:
