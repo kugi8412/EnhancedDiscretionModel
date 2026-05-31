@@ -37,7 +37,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from utils import load_config, load_fasta_with_strand_correction, one_hot_encode_dna
 from models.registry import build_model
-from .model import SparseAutoencoder
+from .model import SparseAutoencoder, TopKSparseAutoencoder
 from .train import _resolve_module, load_activations
 
 
@@ -112,27 +112,23 @@ def _kmer_counts(seqs: list[str], k: int = 6) -> pd.DataFrame:
 
 def enriched_kmers(
     top_seqs:  list[str],
-    all_seqs:  list[str],
+    bg_counts: np.ndarray,   # ZMIANA: gotowe zliczenia tła
+    total_bg_seqs: int,      # ZMIANA: rozmiar tła
     k:         int = 6,
     top_n:     int = 20,
 ) -> pd.DataFrame:
-    """Fisher-exact enrichment of k-mers in *top_seqs* vs *all_seqs* background.
-
-    Returns
-    -------
-    pd.DataFrame sorted by p-value with columns ``kmer``, ``enrichment``, ``pvalue``.
-    """
+    """Fisher-exact enrichment of k-mers in *top_seqs* vs background."""
     from scipy.stats import fisher_exact
 
     top_counts = _kmer_counts(top_seqs, k).values.sum(axis=0)
-    bg_counts  = _kmer_counts(all_seqs,  k).values.sum(axis=0)
     kmers_all  = ["".join(p) for p in __import__("itertools").product("ACGT", repeat=k)]
 
     records = []
     for ki, km in enumerate(kmers_all):
         a = top_counts[ki]
         b = bg_counts[ki]
-        table = [[a, len(top_seqs) - a], [b, len(all_seqs) - b]]
+        table = [[max(0, a), max(0, len(top_seqs) - a)], 
+                 [max(0, b), max(0, total_bg_seqs - b)]]
         odds, p = fisher_exact(table, alternative="greater")
         records.append({"kmer": km, "enrichment": float(odds), "pvalue": float(p)})
 
@@ -145,14 +141,14 @@ def enriched_kmers(
 # ---------------------------------------------------------------------------
 
 def run_analysis(
-    sae:            SparseAutoencoder,
-    features:       np.ndarray,     # (N, F)
-    sequences:      list[str],
-    y_dev:          np.ndarray,
-    y_hk:           np.ndarray,
-    output_dir:     str,
-    top_k:          int = 500,
-    kmer_size:      int = 6,
+    sae:           SparseAutoencoder,
+    features:      np.ndarray,     # (N, F)
+    sequences:     list[str],
+    y_dev:         np.ndarray,
+    y_hk:          np.ndarray,
+    output_dir:    str,
+    top_k:         int = 500,
+    kmer_size:     int = 6,
     min_frac_active: float = 0.02,
 ):
     """End-to-end: compute stats, save CSV, compute k-mer enrichment for top features."""
@@ -163,14 +159,26 @@ def run_analysis(
     print(f"[SAE] Feature stats → {output_dir}/feature_stats.csv")
 
     active_features = stats[stats["frac_active"] >= min_frac_active]["feature_idx"].tolist()
-    print(f"[SAE] Analysing {len(active_features)} features with frac_active ≥ {min_frac_active}")
+    print(f"[SAE] Analysing {len(active_features)} features with frac_active >= {min_frac_active}")
 
     top_k_idx  = top_k_sequences(features, sequences, k=top_k)
     enrichments = {}
-    for fi in active_features:
+    
+    # --- ZMIANA: Obliczamy tło TYLKO RAZ przed pętlą! ---
+    print(f"[SAE] Pre-computing background k-mer frequencies for {len(sequences)} sequences...")
+    bg_counts = _kmer_counts(sequences, k=kmer_size).values.sum(axis=0)
+    total_bg_seqs = len(sequences)
+    print("[SAE] Background ready. Running Fisher Exact tests...")
+    # ---------------------------------------------------
+
+    for i, fi in enumerate(active_features):
         top_seqs = [sequences[i] for i in top_k_idx[fi]]
-        enr = enriched_kmers(top_seqs, sequences, k=kmer_size, top_n=20)
+        enr = enriched_kmers(top_seqs, bg_counts, total_bg_seqs, k=kmer_size, top_n=20)
         enrichments[fi] = enr.to_dict("records")
+        
+        # Opcjonalny pasek postępu, żebyś widział, że coś się dzieje
+        if (i + 1) % 50 == 0:
+            print(f"      Processed {i + 1}/{len(active_features)} features...")
 
     with open(os.path.join(output_dir, "kmer_enrichments.json"), "w") as fh:
         json.dump(enrichments, fh, indent=2)
@@ -193,6 +201,7 @@ def main():
     ap.add_argument("--output_dir",      default="../../results/sae/analysis/")
     ap.add_argument("--top_k",           type=int,   default=500)
     ap.add_argument("--kmer_size",       type=int,   default=6)
+    ap.add_argument("--topk_sae",        type=int,   default=0, help="If > 0, uses TopKSparseAutoencoder")
     ap.add_argument("--dict_size",       type=int,   default=1024)
     ap.add_argument("--input_dim",       type=int,   default=256,
                     help="Activation dimension (must match training).")
@@ -221,13 +230,28 @@ def main():
     acts     = load_activations(model, hook_mod, loader, device)
     print(f"[SAE] Activations: {acts.shape}")
 
-    sae = SparseAutoencoder(args.input_dim, args.dict_size, args.l1_coeff)
+    if args.topk_sae > 0:
+        sae = TopKSparseAutoencoder(args.input_dim, args.dict_size, k=args.topk_sae)
+    else:
+        sae = SparseAutoencoder(args.input_dim, args.dict_size, args.l1_coeff)
+
     sae.load_state_dict(
-        torch.load(args.sae_checkpoint, map_location="cpu", weights_only=True))
+        torch.load(args.sae_checkpoint, map_location=device, weights_only=True)
+    )
+    
+    sae = sae.to(device)
     sae.eval()
 
+    batch_size = 512
+    features_list = []
+    
     with torch.no_grad():
-        features = sae.encode(acts.to(device)).cpu().numpy()
+        for i in range(0, len(acts), batch_size):
+            batch_acts = acts[i : i + batch_size].to(device)
+            batch_feats = sae.encode(batch_acts).cpu().numpy()
+            features_list.append(batch_feats)
+            
+    features = np.concatenate(features_list, axis=0)
 
     run_analysis(sae, features, fasta_seqs, y_dev, y_hk, args.output_dir,
                  top_k=args.top_k, kmer_size=args.kmer_size)

@@ -147,3 +147,65 @@ def compare_model_features(
     plt.savefig(path, dpi=150)
     plt.close()
     print(f"[viz] Saved {path}")
+
+
+# ---------------------------------------------------------------------------
+# CLI entry point
+# ---------------------------------------------------------------------------
+
+def main():
+    """Command-line interface for SAE visualisations."""
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="SAE visualisation CLI",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    # --- feature_stats ---
+    p_fs = sub.add_parser("feature_stats",
+                          help="3-panel summary of per-feature statistics")
+    p_fs.add_argument("--stats_csv", required=True, help="Path to feature_stats.csv")
+    p_fs.add_argument("--output_dir", required=True, help="Directory for output PNGs")
+
+    # --- kmer_enrichment ---
+    p_km = sub.add_parser("kmer_enrichment",
+                          help="k-mer enrichment bar charts for top features")
+    p_km.add_argument("--stats_csv", required=True, help="Path to feature_stats.csv")
+    p_km.add_argument("--kmer_json", required=True, help="Path to kmer_enrichments.json")
+    p_km.add_argument("--output_dir", required=True, help="Directory for output PNGs")
+    p_km.add_argument("--top_n_features", type=int, default=20,
+                      help="Number of top features (by |PCC|) to plot (default: 20)")
+
+    # --- compare_models ---
+    p_cm = sub.add_parser("compare_models",
+                          help="Compare PCC distributions across multiple SAE runs")
+    p_cm.add_argument("--stats_csv", nargs="+", required=True,
+                      help="Paths to feature_stats.csv files")
+    p_cm.add_argument("--labels", nargs="+", required=True,
+                      help="Model labels (same order as --stats_csv)")
+    p_cm.add_argument("--output_dir", required=True, help="Directory for output PNGs")
+    p_cm.add_argument("--metric", default="pcc_dev",
+                      help="Metric column to compare (default: pcc_dev)")
+
+    args = parser.parse_args()
+
+    if args.command == "feature_stats":
+        plot_feature_stats(args.stats_csv, args.output_dir)
+
+    elif args.command == "kmer_enrichment":
+        df = pd.read_csv(args.stats_csv)
+        # Select top features by max(|pcc_dev|, |pcc_hk|)
+        df["max_pcc"] = df[["pcc_dev", "pcc_hk"]].abs().max(axis=1)
+        top_idx = df.nlargest(args.top_n_features, "max_pcc")["feature_idx"].tolist()
+        for fi in top_idx:
+            plot_kmer_enrichment(args.kmer_json, fi, args.output_dir)
+
+    elif args.command == "compare_models":
+        compare_model_features(args.stats_csv, args.labels, args.output_dir,
+                               metric=args.metric)
+
+
+if __name__ == "__main__":
+    main()

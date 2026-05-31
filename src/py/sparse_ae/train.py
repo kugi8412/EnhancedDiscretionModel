@@ -131,7 +131,7 @@ def train_sae(
     -------
     history : dict
         Keys ``epoch``, ``total_loss``, ``recon_loss``, ``l1_loss``,
-        ``dead_fraction``, ``n_resampled``.
+        ``dead_fraction``, ``avg_active_pct``, ``n_resampled``.
     """
     torch.manual_seed(seed)
     os.makedirs(output_dir, exist_ok=True)
@@ -142,7 +142,7 @@ def train_sae(
     optimiser  = optim.Adam(sae.parameters(), lr=lr)
 
     history = {k: [] for k in ("epoch", "total_loss", "recon_loss", "l1_loss",
-                                "dead_fraction", "n_resampled")}
+                                "dead_fraction", "avg_active_pct", "n_resampled")}
 
     for epoch in range(1, epochs + 1):
         sae.train()
@@ -160,20 +160,29 @@ def train_sae(
             sp  += l1.item()
 
         n    = len(loader)
-        probe = activations[:2048].to(device)
+        probe = activations.to(device)
         dead  = sae.dead_feature_fraction(probe)
+
+        # Average active features per sequence (% of dict_size)
+        with torch.no_grad():
+            sae.eval()
+            feats_probe = sae.encode(probe)                           # [B, dict_size]
+            active_per_seq = (feats_probe > 1e-5).float().sum(dim=1)
+            avg_active_pct = (active_per_seq.mean().item() / sae.dict_size) * 100
+            sae.train()
 
         # Dead-neuron resampling
         n_resampled = 0
-        if resample_interval > 0 and epoch % resample_interval == 0:
+        if resample_interval > 0 and epoch % resample_interval == 0 and epoch < epochs * 0.75:
             sae.eval()
             n_resampled = sae.resample_dead_features(
                 probe, threshold=resample_threshold)
             if n_resampled:
-                print(f"           ↺ resampled {n_resampled} dead features")
+                print(f"           Resampled {n_resampled} dead features")
 
         msg = (f"Epoch {epoch:>3}/{epochs}  total={tot/n:.4f}  "
-               f"recon={rec/n:.4f}  l1={sp/n:.4f}  dead={dead:.2%}")
+               f"recon={rec/n:.4f}  l1={sp/n:.4f}  dead={dead:.2%}  "
+               f"avg_active={avg_active_pct:.1f}%")
         print(msg)
 
         history["epoch"].append(epoch)
@@ -181,6 +190,7 @@ def train_sae(
         history["recon_loss"].append(rec / n)
         history["l1_loss"].append(sp / n)
         history["dead_fraction"].append(dead)
+        history["avg_active_pct"].append(avg_active_pct)
         history["n_resampled"].append(n_resampled)
 
     torch.save(sae.state_dict(), os.path.join(output_dir, "sae.pth"))
