@@ -1,0 +1,120 @@
+experiment_name: HypBaza
+seed: 7898
+comet:
+  api_key: ''
+  project_name: kamb
+  workspace: ''
+model:
+  name: HypVQNet
+  kwargs:
+    seq_len: 249
+    vq_dim: 64
+    strides:
+    - 2
+    - 2
+    - 4
+    codes:
+    - 512
+    - 256
+    - 128
+    commit_weight: 0.25
+    rc_stem: true
+    level_radii:
+    - 0.25
+    - 0.6
+    - 1.2
+    recon_weight: 0.15
+    film_init_std: 0.0
+    recon_bypass: false
+    trunk_bypass: true
+    vq_frechet: true
+    occ_channels: 128
+    n_learned: 32
+    trunk_dim: 224
+    n_blocks: 5
+    kernel_size: 5
+    dilations:
+    - 1
+    - 2
+    - 4
+    - 8
+    graph_dim: 128
+    gat_layers: 2
+    heads: 4
+    hidden_dim: 256
+    dropout: 0.2
+    latent_grad: codes
+    enc_na_powloce: true
+    hyp_heads: false
+    hyp_n_proto:
+    - 32
+    - 48
+    - 64
+    hyp_hidden: 128
+    hyp_tau_skala: 0.02
+    hyp_gate_init: 0.02
+    level_grad: true
+    renorm_shells: true
+    pelny_zasieg: true
+    udzial_kontekst: 0.3
+    motywy_do_latentu: true
+    motyw_ch: 8
+    enc_dropout: 0.1
+    attn_codes: false
+    skip_enc: true
+    drabina_stozkowa: true
+    fsq_styczny: true
+    fsq_bity: 9
+    fsq_wzmocnienie: 2.0
+    drab_dlugosc: 1.0
+    drab_krok_promienia: 0.5
+    vq_learnable: true
+    codebook_weight: 0.25
+data:
+  dataset_path: ../../data/deepSTARR
+  batch_size: 96
+  augment: true
+  evoaug:
+    max_augs_per_seq: 1
+    hard_aug: false
+    distribution: poisson
+    poisson_lambda: 0.4
+    augmentations:
+    - name: RandomRC
+      kwargs:
+        rc_prob: 0.5
+  target_noise:
+    apply: true
+    std: 0.05
+  num_workers: 8
+training:
+  lr: 0.001
+  weight_decay: 0.08
+  epochs: 35
+  early_stop: 12
+  grad_clip: 1.0
+  log_dir: train_logs
+  ema:
+    apply: true
+    decay: 0.999
+  scheduler:
+    apply: true
+    warmup_epochs: 0
+    warmup_start: 0.05
+    eta_min: 1.0e-06
+  rc_consistency:
+    apply: true
+    weight: 0.1
+    warmup_epochs: 2
+    rampup_epochs: 5
+    detach_target: false
+    eval: true
+  nash: true
+  nash_n_iter: 20
+  nash_min_waga: 0.125
+  nash_max_waga: 8.0
+  nash_alpha_ema: 0.9
+  nash_bypass: false
+  eval_tta: true
+  riemannian: true
+  nash_unweighted: true

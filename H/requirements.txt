@@ -1,0 +1,5 @@
+# Sprawdzone: torch 2.5.1 (CPU i GPU) oraz torch 2.10.0+cu130 (RTX 5090),
+# numpy 1.26.4, PyYAML 6.0.x, Python 3.11 i 3.12.
+torch>=2.5
+numpy>=1.24
+pyyaml>=6.0

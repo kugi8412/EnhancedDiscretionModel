@@ -1,0 +1,27 @@
+HypBaza evaluation - test
+both strands in file: 41186 rows = 20593 loci; scored per locus
+HypBaza | epoch 20 | val mean PCC 0.75866 | 2277210 params | cuda | FP32 | calibration: yes
+
+mode     target       PCC      SCC      MSE
+no_tta   Dev      0.72562  0.68776   1.1827
+no_tta   Hk       0.79065  0.61885   1.1284
+no_tta   mean     0.75814  0.65331
+rc_tta   Dev      0.73326  0.69475   1.1437
+rc_tta   Hk       0.79539  0.62458   1.1006
+rc_tta   mean     0.76433  0.65966
+
+affine calibration (fitted on: val)
+  Dev: y = -0.0576 + 0.8304*p | MSE 1.1437 -> 1.0841
+  Hk: y = -0.0164 + 0.8778*p | MSE 1.1006 -> 1.0650
+
+RC-TTA by locus class:
+  Other_DHSs             n=  2288 | Dev PCC 0.4728 | Hk PCC 0.3839
+  Other_enhancers        n=   732 | Dev PCC 0.5156 | Hk PCC 0.3953
+  negative               n=  4289 | Dev PCC 0.4711 | Hk PCC 0.4097
+  peak_849bp_region      n= 11188 | Dev PCC 0.7118 | Hk PCC 0.7771
+  positive_peaks         n=  2096 | Dev PCC 0.6298 | Hk PCC 0.8791
+
+Published DeepSTARR on the same loci:
+  Dev PCC 0.67572 | Hk PCC 0.74502 | mean 0.71037
+
+13.1 s
