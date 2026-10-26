@@ -1,10 +1,10 @@
-# HypBaza — predykcja aktywności enhancerów (DeepSTARR)
+# HypBaza
 
 Model przewiduje aktywność enhancera (STARR-seq, komórki S2 *D. melanogaster*)
 dla sekwencji **249 nt**, osobno dla promotora rozwojowego (**Dev**) i
 housekeeping (**Hk**). Wyjście w jednostkach `log2 enrichment`.
 
-Pakiet jest samodzielny — nie wymaga repozytorium KAAMMB.
+Pakiet jest samodzielny nie wymaga nic więcej.
 
 ## Start
 
@@ -53,7 +53,7 @@ effects["Dev"]     # macierz (249, 4), kolejność zasad A, C, G, T
                    # wartość = predykcja(wariant) − predykcja(referencji)
 ```
 
-**Kalibracja** (`calibrated=True` / `--calibrated`) — poprawka afiniczna
+**Kalibracja** (`calibrated=True` / `--calibrated`); poprawka afiniczna
 dopasowana na walidacji, obniża MSE o 3–5 %; PCC i Spearman bez zmian.
 Uwaga: `b` = 0,83 (Dev) / 0,88 (Hk), więc dodatkowo ściska predykcje. Do
 szukania sekwencji skrajnie aktywnych używaj surowych.
